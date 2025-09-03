@@ -10,7 +10,7 @@ const repeat = 0
 const play_at_end = "stop"
 const pattern_max_rows = 10
 const default_playlist = true
-const external_playlist = 'playlists.html'
+const playlist_file = 'playlists.html'
 const valid_extentions = 'it|dmf|mod|mtm|s3m|xm'
 
 const show_libopenmpt = 'bottom'  // bottom|marquee
@@ -415,7 +415,7 @@ libopenmpt.onRuntimeInitialized = function () {
   }
 
   function endSong() {
-    let set_position = True
+    let set_position = true
     stopSong(set_position)
     console.log('DEBUG: clear intervalID = ', intervalID)
     player = undefined
@@ -791,8 +791,8 @@ libopenmpt.onRuntimeInitialized = function () {
   }
 
   function stopButton() {
-    let set_position=True
-    stopStong(set_position)
+    let set_position = true
+    stopSong(set_position)
   }
   
   function ejectButton() {
@@ -1007,19 +1007,20 @@ libopenmpt.onRuntimeInitialized = function () {
     if (default_playlist) {
       if (document.querySelectorAll('#playlist .song').length > 0) {
         document_songs_defined = true;
-        document.querySelectorAll('.song').forEach(function (e) {
-          addListenerToSong(e);
+        document.querySelectorAll('.song').forEach(song => {
+          song.setAttribute("data-modfile", song.dataset.modurl.split(/[/#?]/).pop())
+          addListenerToSong(song);
         });
       } else {
         let tracksmsg = document.getElementById('tracksmsg').innerHTML
-        document.getElementById('tracksmsg').innerHTML = "<p>No tracks found, loading playlist.html  ...</p>" + tracksmsg
+        document.getElementById('tracksmsg').innerHTML = "<p>No tracks found, loading playlists.html  ...</p>" + tracksmsg
       }
     } else {
       document.getElementById('playlist').innerHTML = ''
     }
-    if ((!document_songs_defined || external_playlist != '') && (url_params.get('more'))) {
+    if ((!document_songs_defined || playlist_file != '') && (url_params.get('more'))) {
       document.getElementById('playlist').innerHTML = ''
-      loadFile(external_playlist, function () {
+      loadFile(playlist_file, function () {
         this.responseXML.querySelectorAll('.collection').forEach(pl => {
           if (pl.getAttribute('data-modplist')) {
             pl.querySelectorAll('.song').forEach(song => {
@@ -1031,9 +1032,9 @@ libopenmpt.onRuntimeInitialized = function () {
           document.getElementById('playlist').appendChild(pl);
         });
       });
-      document.getElementById('plinks').innerHTML = '<p><a href="?" onclick="location.reload();">BACK</a></p>'
+      document.getElementById('pl_links').innerHTML = '<p><a href="?" onclick="location.reload();">BACK</a></p>'
     } else {
-      document.getElementById('plinks').innerHTML = '<p><a href="?more=true" onclick="location.reload();">MORE</a></p>';
+      document.getElementById('pl_links').innerHTML = '<p><a href="?more=true" onclick="location.reload();">MORE</a></p>';
     }
   }
   playlist();

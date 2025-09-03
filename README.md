@@ -77,5 +77,5 @@ If optional `default_modurl` is not set, the first file will be played.
 
 For a list of changes compared to the original chiptune2, see [Changes](Changes.md)
 
-For more web players, see [Alternatives.md]([Alternatives.md]) for a list.
+For more web players, see [Alternatives.md](Alternatives.md) for a list.
 

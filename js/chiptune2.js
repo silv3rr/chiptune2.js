@@ -20,7 +20,7 @@ ChiptuneJsConfig.prototype.constructor = ChiptuneJsConfig;
 var ChiptuneJsPlayer = function (config) {
   this.config = config;
   this.context = config.context || new ChiptuneAudioContext();
-  this.currentPlayingNode = null;
+  this.fz = null;
   this.handlers = [];
   this.touchLocked = true;
 }

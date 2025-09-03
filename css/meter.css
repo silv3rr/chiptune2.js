@@ -1,0 +1,88 @@
+.EXAMPLE_COLORS_1 {
+    background-image: linear-gradient(
+        #8bcf69 20%, 
+        #e6d450 20%,
+        #e6d450 40%,
+        #f28f68 40%,
+        #f28f68 60%,
+        #cf82bf 60%,
+        #cf82bf 80%,
+        #719fd1 80%,
+        #719fd1 100%
+    );
+}
+.EXAMPLE_COLORS_2 {
+    background-image: linear-gradient(
+        #0077b6 20%,
+        #0096c7 20%
+        #00b4d8 40%,
+        #48cae4 40%,
+        #90e0ef 60%,
+        #ade8f4 60%,
+        #caf0f8 80%,
+        #caf0f8 80%,
+        #efefef 100%
+    );
+}
+.EXAMPLE meter {
+    width: 90px;
+    margin-right: 10px;
+    /* box-shadow: 0 5px 5px -5px #999 inset; */
+    transition: width .1s;
+}
+
+meter, meter::-webkit-meter-bar {
+    -webkit-appearance: none;
+    appearance: none;
+    background: lightgrey;
+    background-color: lightgray;
+    width: 80px;
+    height: 8px;
+    /* margin-bottom: 10px; */
+    margin-right: 20px;
+    /*  box-shadow: 0 5px 5px -5px #999 inset; */
+    box-shadow: 0 3px 3px -3px darkgray inset;
+    transition: width .1s;
+}
+
+meter::-webkit-meter-low-value {
+    background: var(--color-meter-even-less-good-value)
+}
+meter::-webkit-meter-optimum-value {
+    background: var(--color-meter-suboptimum-value)
+}
+meter::-webkit-meter-high-value {
+    background: var(--color-meter-optimum-value)
+}
+
+meter:-moz-meter-optimum::-moz-meter-bar {
+    background: var(--color-meter-optimum-value)
+}
+meter:-moz-meter-sub-optimum::-moz-meter-bar {
+    background: var(--color-meter-suboptimum-value)
+}
+meter:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+    background: var(--color-meter-even-less-good-value)
+}
+
+meter::-webkit-meter-optimum-value {
+    background: none;
+    background: var(--color-meter-optimum-value)
+}
+meter::-webkit-meter-suboptimum-value{
+    background: none;
+    background: var(--color-meter-suboptimum-value)
+}
+meter::-webkit-meter-even-less-good-value{
+    background: none;
+    background: var(--color-meter-even-less-good-value)
+}
+
+
+@media (max-width: 1200px) {
+    meter,
+    meter::-webkit-meter-bar {
+        width: 12ch;
+        margin-right: 3ch;
+    }
+}

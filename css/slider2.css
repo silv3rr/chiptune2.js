@@ -1,0 +1,98 @@
+#position input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 30px;
+  margin-left: 5%;
+  margin-right: 5%;
+  background: linear-gradient(to right, var(--slider-color) 0%,  var(--slider-color) 100%);
+  background-size: 300px 8px;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  outline:  none;
+  width: 90%;
+}
+
+#position input[type="range"]:disabled {
+  height: 30px;
+  background: linear-gradient(to right, #c7c7ce 0%, #c7c7ce 100%);
+  background-size: 300px 8px;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  outline: none;
+}
+
+#position input[type=range]:disabled::-webkit-slider-runnable-track,
+#position input[type=range]:disabled::-webkit-slider-thumb, 
+#position input[type=range]:disabled::-moz-range-track,
+#position input[type=range]:disabled::-moz-range-thumb {
+  border-color: #fff;
+  color: #fff;
+  background-color: lightgrey;
+}
+
+#position input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 14px;
+  border: 1px solid #000000;
+  border-radius: 3px;
+  cursor: pointer;
+  background: #555;
+  position: relative;
+  z-index: 3;
+  box-shadow: 0 0 5px 0 rgba(0,0,0,0.3);
+}
+
+#position input[type="range"]::-moz-range-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 12px;
+  border: 1px solid #000000;
+  border-radius: 3px;
+  cursor: pointer;
+  background: #555;
+  position: relative;
+  z-index: 3;
+  box-shadow: 0 0 5px 0 rgba(0,0,0,0.3);
+}
+
+#position {
+  display: inline-block;
+  width: 300px;
+  white-space: nowrap;
+  border-color: gray;
+  border-style: solid;
+  border-width: 3px;
+  border-radius: 5px;
+  padding: 1px;
+  margin-bottom: 0px;
+}
+
+#position_time,
+#position_percent {
+  display: inline-block;
+  margin-left: 4px;
+}
+
+#position_time {
+  font-weight: bold;
+}
+
+
+@media (max-width: 1200px) {    
+  #position_text {
+    font-size: x-small;
+    padding-left: 3px;
+    position: absolute;
+  }
+  #position_percent,
+  #position_time {
+    display: inline-block;
+    margin: 0px;
+    padding: 0px;
+  }
+}

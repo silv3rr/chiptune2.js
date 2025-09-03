@@ -1,0 +1,6 @@
+examples/
+tracks/
+mirror/
+js/libopenmpt-*
+*.bak
+ttbdmp_playlist.html

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html class="no-js">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>WMPlay</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/normalize.min.css">
+  <link rel="stylesheet" href="css/slider1.css">
+  <link rel="stylesheet" href="css/slider2.css">
+  <link rel="stylesheet" href="css/meter.css">
+  <link rel="stylesheet" href="css/vu.css">
+  <script type="text/javascript" src="js/volume-meter.js"></script>
+  <script type="text/javascript" src="js/visualizer.js"></script>
+  <script type="text/javascript" src="js/vu.js"></script>
+  <script type="text/javascript" src="js/chiptune2.js"></script>
+  <script type="text/javascript" src="js/chiptune2a.js"></script>
+  <script type="text/javascript" src="js/interface.js"></script>
+  <script type="text/javascript" src="js/wmplay.js"></script>
+  <script type="text/javascript" src="js/libopenmpt.js"></script>
+</head>
+
+<body>
+  <div id="settings" class="top"></div>
+  <div class="bg"></div>
+  <div class="top">
+    <span id="notification"></span>
+  </div>
+  <div id="player">
+    <span id="title">
+      <img src="favicon.svg"> WMPlay
+    </span>
+    <div id="subtitle">a <a href="https://github.com/silv3rr/chiptune2.js/tree/wmplay">fork</a> of <a
+        href="https://deskjet.github.io/chiptune2.js/">chiptune2.js</a></div>
+    <hr>
+    <span id="scroller">
+      <marquee style="color:var(--marquee-color);background-color:var(--marquee-bg-color);">
+        Hi! No module loaded ::
+        Press <strong>Play</strong> or click on song from playlist in Tracks below ::
+        Press Open for local file or url ::
+        To select a theme or change other <strong>Settings</strong>, use the dropdown menu on the top left ::
+        Press 'h'for keyboard shortcuts :: 
+        WMPlay (Web Mod Player) based on chiptune2.js and libopenmpt ::
+      </marquee>
+    </span>
+    <div id="controls">
+      <div>
+        <span id="position">
+          <input id="position_range" type="range" value="0" min="0" max="100" step="1" disabled>
+        </span>
+        <span id="position_text">
+          <div id="position_time"></div>
+          <div id="position_percent"></div>
+        </span>
+      </div>
+      <div>
+        <input type="button" value="&lt;&lt; Prev" id="prev">
+        <input type="button" value="&gt; Play" id="play">
+        <input type="button" value="[] Stop" id="stop">
+        <input type="button" value="&gt;&gt; Next" id="next">
+        <input type="button" value="^ Eject" id="eject">
+      </div>
+      <hr>
+      <div>
+        <div class="slider" id="volume">
+          Volume <input id="volume_range" type="range" min="0" max="100" step="0.10" disabled> <span id="volume_percent"></span>
+        </div>
+        <div class="slider" id="gain">
+          Gain <input id="gain_range" type="range" min="0" max="1" step="0.01" disabled> <span id="gain_percent"></span>
+        </div>
+        <span class="slider" id="tempo">
+          Tempo <input id="tempo_range" type="range" min="0.01" max="2.00" step="0.01" disabled> <span id="tempo_factor"></span>
+        </span>
+        <span class="slider" id="pitch">
+          Pitch <input id="pitch_range" type="range" min="0.01" max="2.00" step="0.01" disabled> <span id="pitch_factor"></span>
+        </span>
+      </div>
+    </div>
+  </div>
+  <div id="open" style="display:none">
+    <h2>Open</h2>
+    <div>
+      Browse for local module <strong>file</strong> to load
+      <div id="choosefile" class="banner">
+        <input type="file" id="files" name="files" />
+      </div>
+    </div>
+    <hr>
+    <div>
+      Load module from <strong>URL</strong>
+      <div id="chooseurl" class="banner">
+        <div>
+          <label>External URL
+            <input type="text" id="exturl" name="exturl">
+            <input type="button" value="Submit" id="submiturl" name="submiturl">
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="info" style="display:none">
+    <h2>Info</h2>
+    <span id="song_info"></span>
+  </div>
+  <div id="debug" style="display:none"></div>
+  <div id="vu" style="display:none">
+    <span id="vu_title"></span>
+    <!--p><span id="current_channel_vu_left"></span></p-->
+    <!--p><span id="current_channel_vu_right"></span></p-->
+    <!--p><span id="current_channel_vu_mono"></span></p-->
+    <div id="wrap" self="center" class="smoke">
+      <header id="header" self="top">
+        <div class="VU" style="float:left">
+          <div id="vu-left" class="vu-left">
+          </div>
+        </div>
+        <div class="VU" style="overflow:hidden;">
+          <div id="vu-right" class="vu-right">
+          </div>
+        </div>
+    </div>
+  </div>
+  <div id="visualizer" style="display:none;">
+    <span id="visualizer_title"></span>
+    <canvas id="canvas"></canvas>
+  </div>
+  <div id="pattern" style="display:none">
+    <h2>Pattern</h2>
+    <div>
+      <span id="current_order"></span><span id="total_order"></span> <span id="current_pattern"></span><span
+        id="total_patterns"></span>
+      <span id="current_channels"></span> <span id="current_speed"></span> <span id="current_tempo"></span> <span
+        id="current_bpm"></span>
+    </div>
+    <div id="show_channels">
+      <span id="channels"></span>
+      <span id="pattern_row_channel"></span>
+      <span id="channel_vu_meters"></span>
+    </div>
+  </div>
+  <div id="comments" style="display:none">
+    <h2>Comments</h2>
+    <span id="message" style="display:none">
+      <details id="show_hide">
+        <summary id="message_summary"></summary>
+        <div id="message_details"></div>
+      </details>
+    </span>
+    <span id="samples" style="display:none">
+      <details id="show_hide">
+        <summary id="samples_summary"></summary>
+        <div id="samples_details"></div>
+      </details>  
+    </span>
+    <span id="instruments" style="display:none">
+      <details id="show_hide">
+        <summary id="instruments_summary"></summary>
+        <div id="instruments_details"></div>
+      </details>
+    </span>
+  </div>
+  <div id="tracks">
+    <h2>Tracks</h2>
+    <div id="tracksmsg">
+      <p>Click on a filename to play song</p>
+    </div>
+    <div id="playlist">
+
+      <!-- Module Data. Add modules to playlist and set default song (or omit to play the first). A few examples:       
+        <div class="collection" data-modplist="">
+          <article class="song" data-modurl="url/or/path/to/mymodule.it" data-modtitle="My Mod" data-modfile="mymodule.it" data-moddate="1999-12-31" data-modsize="100kb" href="#"></a>
+          <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=57925#space_debris.mod" data-modfile="" data-modtitle="Markus 'Captain' Kaarlonen - Space Debris" data-modtime="05:05" data-moddate="1991-03-29" data-modsize="39kb"></article>
+          <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=48407#MR_STRID.XM"      data-modfile="" data-modtitle="MickRip - Astrid" data-modtime="04:32" data-moddate="1996-03-31" data-modsize="812kb"></article>
+          <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=60395#2ND_PM.S3M"       data-modfile="" data-modtitle="Purple Motion/FC - Unreal 2" data-modtime="06:44" data-moddate="1993-10-09" data-modsize="587kb">/article>
+          <script type="text/javascript">default_modurl = "https://api.modarchive.org/downloads.php?moduleid=57925#space_debris.mod";</script>
+        <div>
+      -->
+
+      </div>
+    </div>
+    <div id="plinks"></div>
+  </div>
+  <div id="bottom"></div>
+  <script type="text/javascript" src="js/settings.js"></script>
+</body>
+
+</html>

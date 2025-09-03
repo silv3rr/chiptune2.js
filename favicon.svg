@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 40.504646 48.023003" xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <linearGradient id="a">
+      <stop stop-color="#57b7ec" offset="0" />
+      <stop stop-color="#066b9d" offset="1" />
+    </linearGradient>
+    <linearGradient id="e" x1="11.134" x2="17.996" y1="994.27" y2="1026.4" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff" offset="0" />
+      <stop stop-color="#fff" stop-opacity="0" offset="1" />
+    </linearGradient>
+    <linearGradient id="d" x2="0" y1="990.47" y2="1051.2" gradientUnits="userSpaceOnUse" xlink:href="#a" />
+    <linearGradient id="c" x2="0" y1="991.23" y2="1051.1" gradientUnits="userSpaceOnUse" xlink:href="#a" />
+    <linearGradient id="b" x2="0" y1="991.03" y2="1050.4" gradientUnits="userSpaceOnUse" xlink:href="#a" />
+  </defs>
+  <g transform="translate(56.037 -964.1)">
+    <g transform="matrix(.79082 0 0 .79082 -58.187 180.92)">
+      <path
+        d="m31.996 990.89c-0.44821-0.0369-1.0824 0.22102-1.9736 0.831-3.565 2.44-16.516 16.568-16.516 16.568-0.11297 0-0.20198 0.04-0.31162 0.052h-9.9829v24.826h10.295s12.721 14.18 16.516 16.62 3.0124-1.3514 3.0124-3.0124v-52.093c0-1.2459 0.3059-3.6805-1.0387-3.7914v3.3e-4z"
+        fill="url(#d)" stroke="#0070a3" />
+      <path
+        d="m30.771 993.77c-0.4016-0.0329-0.96978 0.19805-1.7684 0.74458-3.1942 2.1862-15.138 15.355-15.138 15.355-0.10122 0-0.18097 0.037-0.27921 0.047h-8.9813v16.52c5.1158-0.7796 10.555-1.9812 16.148-3.5834 3.7183-1.0653 7.4094-2.428 10.78-3.7067l0.17007-21.979c0-1.1163 0.27408-3.2977-0.93071-3.3971v-2.2e-4z"
+        fill="url(#e)" />
+      <path
+        d="m38.23 1004.9-2.5117 2.3495s5.9062 4.1564 5.9062 13.219-5.875 12.938-5.875 12.938l2.4492 2.625s7.1133-5.7511 7.1133-15.562-7.0821-15.568-7.0821-15.568z"
+        fill="url(#b)" stroke="#0070a3" stroke-linejoin="round" stroke-width=".5" />
+      <path
+        d="m45.602 999.02-2.4146 2.1061s1.6021 1.5068 3.25 4.7188 3.3125 8.0944 3.3125 14.75-1.669 11.402-3.3125 14.5-3.2188 4.4687-3.2188 4.4687l2.246 2.1114s2.7128-2.45 4.4727-5.7677 3.5-8.3731 3.5-15.312-1.7445-12.11-3.5-15.531-4.3354-6.0436-4.3354-6.0436z"
+        fill="url(#c)" stroke="#0070a3" stroke-linejoin="round" />
+      <path
+        d="m38.23 1004.9-2.5117 2.3495s5.9062 4.1564 5.9062 13.219-5.875 12.938-5.875 12.938l2.4492 2.625s7.1133-5.7511 7.1133-15.562-7.0821-15.568-7.0821-15.568z"
+        fill="url(#b)" stroke="#0070a3" stroke-linejoin="round" />
+    </g>
+  </g>
+</svg>

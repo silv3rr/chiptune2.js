@@ -2,6 +2,8 @@
 
 Web Mod Player (wmplay.js) requires chip2une2.js, chiptune2a.js and libopenmpt.js (tested with 0.6.6 and 0.7.13)
 
+View live [example here](https://0008086.xyz/chiptune2.js/)
+
 See [chiptune2.js/README.md](https://github.com/deskjet/chiptune2.js/blob/master/README.md) for original README
 
 ## Settings

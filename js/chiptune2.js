@@ -181,12 +181,27 @@ ChiptuneJsPlayer.prototype.createLibopenmptNode = function(buffer, config) {
 
   var maxFramesPerChunk = 4096;
   var processNode = this.context.createScriptProcessor(2048, 0, 2);
+
+  
+  // TODO:  createScriptProcessor -> AudioWorkletNode
+  /*
+  var processNode;
+  processNode = async (context) => {
+    await context.audioWorklet.addModule("js/chiptune-processor.js");
+    processNode = new AudioWorkletNode(context, "chiptune-processor");
+  }
+  console.log(processNode)
+  */
+ 
+
   processNode.config = config;
   processNode.player = this;
   var byteArray = new Int8Array(buffer);
   var ptrToFile = libopenmpt._malloc(byteArray.byteLength);
   libopenmpt.HEAPU8.set(byteArray, ptrToFile);
   processNode.modulePtr = libopenmpt._openmpt_module_create_from_memory(ptrToFile, byteArray.byteLength, 0, 0, 0);
+  // XXX: add extModulePtr for openmpt_module_ext_get_interface
+  processNode.extModulePtr = libopenmpt._openmpt_module_ext_create_from_memory(ptrToFile, byteArray.byteLength, 0, 0, 0, 0, 0, 0, 0);
   processNode.paused = false;
   processNode.leftBufferPtr  = libopenmpt._malloc(4 * maxFramesPerChunk);
   processNode.rightBufferPtr = libopenmpt._malloc(4 * maxFramesPerChunk);

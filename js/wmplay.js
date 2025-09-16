@@ -32,6 +32,7 @@ var shuffle = true
 var play_next = true
 var show_vu
 
+var toggle_sort = { file: true, title: true, date: true, time: true, size: true }
 var volMeterData = { volume: 0, buffer: 0, clipping: false }
 
 
@@ -871,6 +872,18 @@ libopenmpt.onRuntimeInitialized = function () {
     }, false)
   }
 
+  let sort_buttons = "";
+  let i = 0
+  let last = Object.keys(toggle_sort).length-1
+  Object.keys(toggle_sort).forEach(k => {
+    sort_buttons += `<button class="btn-txt" id="sort_${k}">${k}</button>${i<last ? '|' : ''}`;
+    i++;
+  });
+  document.getElementById('sort_buttons').innerHTML = sort_buttons
+  Object.keys(toggle_sort).forEach(k =>
+    document.querySelector(`#sort_${k}`).addEventListener('click', function () { sortSongs(k, toggle_sort[k]); })
+  );
+
   document.addEventListener('keydown', (event) => {
     //console.log('DEBUG: keydown = ', event)
     if (event.defaultPrevented) {
@@ -1042,7 +1055,43 @@ libopenmpt.onRuntimeInitialized = function () {
   }
   playlist();
 
+  function sortSongs(type, asc) {
+    console.log(type,asc)
+    attr = `mod${type}`
+    function leftPadNum(num, len) {
+      return num.toString().padStart(len, '0')
+    }
+    function compare_asc(a, b) {
+      if (a.dataset[attr] < b.dataset[attr]) return -1;
+      if (a.dataset[attr] > b.dataset[attr]) return 1;
+      return 0;
+    }
+    function compare_desc(b, a) {
+      if (a.dataset[attr] < b.dataset[attr]) return -1;
+      if (a.dataset[attr] > b.dataset[attr]) return 1;
+      return 0;
+    }
+    var data = document.querySelectorAll(`[data-${attr}]`);
+    var dataArray = Array.from(data);
+    document.querySelectorAll(".collection").forEach(e =>
+      e.style.display = 'none'
+    )
+    if (attr === 'modsize') {
+      dataArray.forEach(e => 
+        e.setAttribute("data-modsize", leftPadNum(e.getAttribute("data-modsize"), 6))
+      );
+    } 
+    let sorted = asc ? dataArray.sort(compare_asc) : dataArray.sort(compare_desc);
+    sorted.forEach(e => {
+      e.setAttribute("data-modsize", `${Number(e.getAttribute("data-modsize"))}`)
+      document.querySelector("#playlist").appendChild(e)
+    })
+    toggle_sort[type] = !toggle_sort[type]
+    document.getElementById('sort_order').innerHTML = `${toggle_sort[type] ? 'asc' : 'desc'}`
+  };
+
 } // end libopenmpt.onRuntimeInitialized
+
 
 window.onload = function () {
   console.log('DEBUG: onload')

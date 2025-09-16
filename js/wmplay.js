@@ -3,40 +3,48 @@
  * Needs: libopenmpt.js chiptune2.js and chiptune2a.js
  */
 
-/* OPTIONS */
+/* Options */
 
 const delay = 50
 const repeat = 0
 const play_at_end = "stop"
-const pattern_max_rows = 10
+const pattern_max_rows = 12
 const default_playlist = true
 const playlist_file = 'playlists.html'
 const valid_extentions = 'it|dmf|mod|mtm|s3m|xm|zip'
 
-const show_libopenmpt = 'bottom'  // bottom|marquee
+const show_libopenmpt = 'bottom'  // 'bottom|marquee'
 const show_notifications = true
 const show_open_button = true
 const show_gain = false
-const show_old_vu = false
-const visualSetting = "off"  // off|sinewave|line|frequencybars|bars(WIP)
 
 const visuals = ['sinewave', 'line', 'frequencybars', 'invertedbars']
 const visualSetting = "random"  // "off", "random", or visuals[i]
+
 const use_drop_files = false
 const use_gain_node = false
 const use_libopenmpt_volume = false
+const use_old_lib = false
+const use_old_meter_vu = false
 
 var debug = 2
 var mute = false
-var enable_volume_meter = false
+var enable_volume_meter = true
 
 var shuffle = true
 var play_next = true
+var show_vu = true
 var show_visualizer = true
 
 var toggle_sort = { file: true, title: true, date: true, time: true, size: true }
 var volMeterData = { volume: 0, buffer: 0, clipping: false }
 var drawVisual
+
+const notifications = {
+  reload: `<a href="?" onclick="location.reload();"> 🔄 Reload</a> to apply setting(s)`,
+  performance: "⚠ NOTE: performance sucks with visualizer enabled ;(",
+  old_lib: "⚠ NOTE: does not play 100% correctly, IT resonance filters are missing",
+}
 
 
 window['libopenmpt'] = {}
@@ -75,129 +83,80 @@ libopenmpt.onRuntimeInitialized = function () {
   var default_modurl
   var duration_seconds
 
-  console.log('DEBUG: libopenmpt.onRuntimeInitialized')
+  console.log('libopenmpt.onRuntimeInitialized')
 
-  function init() {
-    console.log('DEBUG: init')
-    //let roperty_value = false
-    //disableStopButton(property_value)
+  function init() {    
+    console.log('init')
     button = document.getElementById("stop")
     if (button) {
       button.disabled = false
     }
-    //setPauseButtonId()
-
     //TODO: msg processor
-    //volMeter.port.postMessage("test123");
-    //volumeMeterNode.port.postMessage("node test123");
-    //console.log('DEBUG: vu =', volumeMeterNode)
-
+    // volumeMeterNode.port.postMessage("node test123");
+    // console.log('DEBUG: vu =', volumeMeterNode)
     if (player == undefined) {
-      if (debug > 2) {
-        console.log('DEBUG: init -- player undefined')
-      }
-
+      console.log('player is undefined')
       player = new ChiptuneJsPlayer(new ChiptuneJsConfig(repeat));
-
       player.onEnded(() => { endSong(); })
-
-      function lateInit() {
-        if (player) {
-          if (!player.processNode) {
-            setTimeout(() => { lateInit() }, 100)
-            return
-          }
-          // attempt to reconnect (old) meter and analyser after 100ms 
-          if (show_old_vu) {
-            player.currentPlayingNode.connect(meter)  
-          }
-          //analyser.connect(player.currentPlayingNode.context.destination)
-          //player.currentPlayingNode.connect(analyser)
-        }
-      }
-      lateInit()
-
       if (debug > 2) {
         console.log('DEBUG: player =', player, ' player config =', player.config, ' player context =', player.context)
         console.log('DEBUG: player currentPlayingNode =', player.currentPlayingNode)
       }
-
-      // make sure we clear patterns (array of rows) of last song
+      // make sure we clear patterns of prev song (array of rows)
       format_pattern_row_all_channels = []
 
-      intervalID = setInterval(function () {
-        // check if song is actually playing
-        if (player.currentPlayingNode && (player.currentPlayingNode.modulePtr && player.currentPlayingNode.modulePtr > 0)) {
-          getSongData()
-          showSongData()
+      //TODO:
+      //intervalID = setTimeout(() => {
+      //intervalID = setInterval(() => {
 
-          // TODO:
-          //console.log('DEBUG: getVolume', player.getVolume());
+      // check if song is actually playing
+      if (player.currentPlayingNode && (player.currentPlayingNode.modulePtr && player.currentPlayingNode.modulePtr > 0)) {
 
-          // test meter vol peaks >10,20,30,40
-          if (debug > 4) {
-            roundvol = roundNumDec(volMeterData.volume * 100, 0);
-            [10, 20, 30, 40].forEach(pct =>(roundvol > pct) && console.log(`DEBUG: round volume >${pct}`, volMeterData.volume, roundvol))
-          }
-          if (debug > 3) {
-            console.log('DEBUG: volumeMeterNode =', volumeMeterNode, ' volMeterData.volume =', volMeterData.volume)
-          }
 
-          // TODO: move to load
-          // vu.js (new)
-          //if (show_vu) {
-          //  initVU();
-          //}
+      setInterval(() => {
+        currentSongInfo();
+        patternViewer();
+      }, delay)
 
-          // visualizer.js
-          if (visualSetting !== 'off') {
-            visualize(visualSetting);
-          }
 
-          // TODO: use vol from libopenmpt (sum all channels)
-          if (use_libopenmpt_volume) {
-            let sum_vol = 0;
-            for (let chan_vol of all_channels_vu_mono) {
-                sum_vol += chan_vol;
-            }
-            document.getElementById('debug').innerHTML = sum_vol
-          }
-
-          // TODO: use getGain
-          // requires changing chiptuneJsPlayer.prototype.play
-          if (use_gain_node) {
-            try {
-            //gainNode.gain.value = sum_vol
-            gainNode = {
-              gain: {
-                value: all_channels_vu_mono.reduceRight((acc, cur) => acc + cur, 0),
-                minValue: 0,
-                maxValue: 5,
-              }
-            }
-              gainNode = player.context.gain
-              //document.getElementById('debug').innerHTML += sum_vol + ' ';
-              //document.getElementById('debug').innerHTML =  all_channels_vu_mono.reduceRight((acc, cur) => acc + cur, 0)
-              //console.log('DEBUG: player.context.createGain() =',  player.context.createGain()) ' player.context.destination =', player.context.destination, ' player.currentPlayingNode =', player.currentPlayingNode)
-              //gainNode = player.context.createGain()
-              //gainNode = player.context.gain
-              //gainNode.connect(player.context.destination)
-              //player.currentPlayingNode.gain.connect(player.context.destination)
-              //console.log('DEBUG: gainNode =', gainNode.gain, ' player.gain =', player.gain)
-              //console.log('DEBUG: gainNode =', gainNode, ' analyser =', analyser, ' player', player)
-              document.getElementById('debug').innerHTML = player.getGain()
-            } catch {
-              console.error("gainNode")
-            }
-          }
+        //songInfo()
+        // TODO:
+        //console.log('DEBUG: getVolume', player.getVolume());
+        // test meter vol peaks (>10,20,30,40)
+        if (debug > 4) {
+          roundvol = roundNumDec(volMeterData.volume * 100, 0);
+          [10, 20, 30, 40].forEach(pct =>(roundvol > pct) && console.log(`DEBUG: round volume >${pct}`, volMeterData.volume, roundvol))
         }
-      }, delay)  // end setInterval
+        if (debug > 3) {
+          console.log('DEBUG: volumeMeterNode =', volumeMeterNode, ' volMeterData.volume =', volMeterData.volume)
+        }
+        // TODO: use vol from libopenmpt (sum all channels)
+        if (use_libopenmpt_volume) {
+          let sum_vol = 0;
+          for (let chan_vol of all_channels_vu_mono) {
+            sum_vol += chan_vol;
+          }
+          document.getElementById('debug').innerHTML = sum_vol
+        }
+        // TODO: use getGain
+        // requires changing chiptuneJsPlayer.prototype.play
+        if (use_gain_node) {
+          getGain()
+        }
+      }
+
+      //}, delay)  // end setInterval
+
+
     } else {
+      //player.context.suspend()
       player.stop();
       setPauseButtonId();
     }
   } // end init()
 
+
+  /* Helper functions */
 
   function numOrZero(num) {
     return num ? num : 0
@@ -437,7 +396,7 @@ libopenmpt.onRuntimeInitialized = function () {
     //meter = undefined
     clearInterval(intervalID)
     document.getElementById('song_info').innerHTML = ''
-    document.getElementById('scroller').innerHTML = '<marquee style="color:var(--marquee-color);background-color:var(--marquee-bg-color);">No module loaded, click on a filename in Track below or press Eject</marquee>'
+    document.getElementById('scroller').innerHTML = '<marquee style="color:var(--marquee-color);background-color:var(--marquee-bg-color);">No module loaded, click on a song below</marquee>'
     document.getElementById("position_time").innerHTML = `00:00`
     document.getElementById("position_percent").innerHTML = "100%"
     document.getElementById('position_range').disabled = true
@@ -467,7 +426,7 @@ libopenmpt.onRuntimeInitialized = function () {
     }
   }
 
-  function metadata(filename) {
+  function metaData(filename) {
     let format_song_id = ''
     let format_message = ''
     let format_instruments = ''
@@ -501,7 +460,7 @@ libopenmpt.onRuntimeInitialized = function () {
         metadata['date'] = new Date(filename.lastModified).toISOString()
         format_filename = filename.name.split('/').reverse()[0]
         format_location = filename.webkitRelativePath ? filename.webkitRelativePath : 'local'
-        size = `${roundNumDec(filename.size / 1024, 0)}kb`
+        size = `${roundNumDec(filename.size / 1024, 0)}`
       } catch (e) {
         console.log('DEBUG: filename error =', e)
       }
@@ -542,11 +501,11 @@ libopenmpt.onRuntimeInitialized = function () {
       //console.log('DEBUG: format_bg_style_height = ', format_bg_style_height);
     }
 
-    let format_info =
+    let format_current_song_info =
       `songid: <span id='value'>${format_song_id ? format_song_id : '<span id="font-bg-color">N/A</span>'}</span>
-       filename: ${modurl ? '<a href="${modurl}">' + format_filename + '</a>' : format_filename}
+       filename: ${modurl ? `<a href="${modurl}">` + format_filename + '</a>' : format_filename}
        location: ${format_location}
-       size: ${size ? size : '<span id="font-bg-color">N/A</span>'}
+       size: ${size ? `${Number(size)}kb` : '<span id="font-bg-color">N/A</span>'}
        duration: ${format_duration_time}
        patterns: ${format_num_patterns}
        channels: ${leftPadNum(channels, 2)}
@@ -555,28 +514,25 @@ libopenmpt.onRuntimeInitialized = function () {
        date: ${(date !== '' && date !== null) ? date : '<span id="font-bg-color">N/A</span>'}`
 
     if (debug > 2) {
-      console.log('DEBUG: format_info =', format_info)
+      console.log('DEBUG: format_song_details =', format_current_song_info)
     }
 
     if (metadata['message'] && num_message > 0) {
       format_message = metadata['message'].replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br />')
       document.getElementById('message').style.display = "block"
     }
-
     if (sample_names && num_samples > 0) {
       for (var i = 0; i < num_samples; i++) {
         format_samples += sample_names[i] ? `${leftPadNum(i + 1, 2)}: ${sample_names[i]}<br />` : `${leftPadNum(i + 1, 2)}: <br />`;
       }
       document.getElementById('samples').style.display = "block"
     }
-
     if (instrument_names && num_instruments > 0) {
       for (var i = 0; i < num_instruments; i++) {
         format_instruments += instrument_names[i] ? `${leftPadNum(i + 1, 2)}: ${instrument_names[i]}<br />` : `${leftPadNum(i + 1, 2)}: <br />`;
       }
       document.getElementById('instruments').style.display = "block"
     }
-
     document.getElementsByClassName('bg')[0].style.height = format_bg_style_height
     document.getElementById('position_range').max = format_position_max
     document.getElementById('total_order').innerHTML = `/${leftPadNum(num_orders, 2)}`
@@ -587,6 +543,43 @@ libopenmpt.onRuntimeInitialized = function () {
     document.getElementById('message_details').innerHTML = format_message
     document.getElementById('samples_details').innerHTML = format_samples
     document.getElementById('instruments_details').innerHTML = format_instruments
+    document.getElementById('song_info').innerHTML = format_current_song_info
+  }
+
+  // use original meter (createScriptProcessor)
+  function oldMeterVU(){
+    //use_old_meter_vu
+    if (!meter) {
+      meter = createAudioMeter(player.context);
+      initVU(player);
+    }
+    if (meter.numberOfInputs != 1 || meter.numberOfOutput != 1) {
+      player.currentPlayingNode.connect(meter)
+    };
+    function lateInit() {
+      if (player) {
+        if (!player.processNode) {
+          setTimeout(() => { lateInit() }, 100)
+          return
+        }
+        // attempt to reconnect meter and analyser after 100ms 
+        player.currentPlayingNode.connect(meter)  
+        //analyser.connect(player.currentPlayingNode.context.destination)
+        //player.currentPlayingNode.connect(analyser)
+      }
+    }
+    lateInit();
+    if (debug > 2) {
+      if (meter.buf) {
+        for (var i=0; i<meter.buf.length; i++) {
+          document.getElementById('debug').innerHTML = meter.buf[i]
+        }
+      }
+      //console.log('DEBUG: meter.volume',  meter.volume)
+      //let sum_vol = roundNumDec((meter.volume * 100)*2*2, 0);
+    }
+  }
+
   function getGain() {
     try {
       //gainNode.gain.value = sum_vol
@@ -616,6 +609,9 @@ libopenmpt.onRuntimeInitialized = function () {
     }
   }
 
+  //TODO:
+  //async function afterLoad(path, buffer) {
+    //await Promise.resolve(player.play(buffer));
 
   function afterLoad(path, buffer) {
     player.play(buffer)
@@ -671,7 +667,7 @@ libopenmpt.onRuntimeInitialized = function () {
     if (!p.match(re)) {
       throw new Error(`Invalid module: ${p}`);
     }
-    setDefaults();
+    setElements();
     setModData();
     init();
     player.load(path, afterLoad.bind(this, path))
@@ -691,6 +687,8 @@ libopenmpt.onRuntimeInitialized = function () {
     loadURL(modurl);
     //document.querySelectorAll(".song").forEach(e => e.style.color = 'black')
   }
+
+  /* Buttons */
 
   function switchButtons() {
     let halt = false;
@@ -734,17 +732,20 @@ libopenmpt.onRuntimeInitialized = function () {
       disableStopButton(property_value);
     }
   }
-  
-  // Buttons
 
+  function nodelist() {
+    //console.log('DEBUG: next', document.querySelectorAll(`.song[data-modurl='${modurl}']`))
+    //nodelist ? nodelist[0].getAttribute("data-modurl") : null
+    i = 0
+    nodelist.forEach(e => {
+      if (e.getAttribute("data-modurl") === modurl) {
+        return e
+      };
+      i++
+    });
+  }
+  
   function nextSong() {
-    // nodelist ? nodelist[0].getAttribute("data-modurl") : null
-    // console.log('DEBUG: next', document.querySelectorAll(`.song[data-modurl='${modurl}']`))
-    // i = 0
-    // nodelist.forEach(e =>
-    //  if (e.getAttribute("data-modurl") === modurl) break
-    //  i++
-    // )
     const songlist = document.querySelectorAll(".song");
     for (let i = 0; i + 1 < songlist.length; i++) {
       //songlist[i].style.color = 'black'
@@ -788,7 +789,7 @@ libopenmpt.onRuntimeInitialized = function () {
       //console.log('DEBUG: playPauseButton togglepause')
       player.togglePause()
     } else {
-      //console.log('DEBUG: playPauseButton else')
+      //console.log('DEBUG: playPauseButton playDefaultSong')
       playDefaultSong()
       //property_value = false
       //disableStopButton(property_value)
@@ -818,7 +819,8 @@ libopenmpt.onRuntimeInitialized = function () {
   }
   
   function ejectButton() {
-    endSong()
+    let set_position = true
+    stopSong(set_position)
     if (show_open_button) {
       document.getElementById('open').style.display = "block"
       document.getElementById('open').scrollIntoView()
@@ -864,29 +866,23 @@ libopenmpt.onRuntimeInitialized = function () {
 
   document.querySelector('#pitch_range').addEventListener('input', function (e) {
     player.module_ctl_set_floatingpoint('play.pitch_factor', parseFloat(e.target.value))
-    document.getElementById('pitch_factor').innerHTML = e.target.value.toString()
+    document.getElementById('pitch_factor').innerHTML = parseFloat(e.target.value).toFixed(2).toString()
   }, false)
 
   document.querySelector('#tempo_range').addEventListener('input', function (e) {
-    if (player) {
-      player.module_ctl_set_floatingpoint('play.tempo_factor', parseFloat(e.target.value))
-      document.getElementById('tempo_factor').innerHTML = e.target.value.toString()
-    }
+    player.module_ctl_set_floatingpoint('play.tempo_factor', parseFloat(e.target.value))
+    document.getElementById('tempo_factor').innerHTML = parseFloat(e.target.value).toFixed(2).toString()
   }, false)
 
   document.querySelector('#volume_range').addEventListener('input', function (e) {
-    if (player) {
-      player.setVolume(e.target.value)
-      document.getElementById('volume_percent').innerHTML = `${roundNumDec(e.target.value, 0)}%`
-    }
+    player.setVolume(e.target.value)
+    document.getElementById('volume_percent').innerHTML = `${roundNumDec(e.target.value, 0)}%`
   }, false)
 
   if (show_gain) {
     document.querySelector('#gain_range').addEventListener('input', function (e) {
-      if (player) {
-        player.gain.value = e.target.value
-        document.getElementById('gain_percent').innerHTML = `${roundNumDec(e.target.value * 100, 0)}%`
-      }
+      player.gain.value = e.target.value
+      document.getElementById('gain_percent').innerHTML = `${roundNumDec(e.target.value * 100, 0)}%`
     }, false)
   }
 
@@ -910,12 +906,15 @@ libopenmpt.onRuntimeInitialized = function () {
     switch (event.code) {
       case "KeyH":
         alert(
-          "Play/pause: <spacebar>\n" +
-          "Stop: <F8>\n" +
-          "Forward: <right arrow>\n" +
-          "Backward: <left arrow>\n" +
-          "Mute: <m>\n" +
-          "Help: <h>\n"
+          "\n" +
+          "Keyboard Shortcuts\n" +
+          "------------------------\n\n" +
+          "Play/pause: SPACEBAR\n" +
+          "Stop: F8\n" +
+          "Forward +10s: RIGHT ARROW KEY\n" +
+          "Backward -10s: LEFT ARROW KEY\n" +
+          "Mute: 'm'\n" +
+          "Help: 'h'\n\n"
         )
         break;
       case "Space":
@@ -934,7 +933,6 @@ libopenmpt.onRuntimeInitialized = function () {
       case "KeyM":
         if (player) {
           let vol;
-          // libopenmpt volume
           if (mute) {
             mute = false
             vol = 75
@@ -944,8 +942,8 @@ libopenmpt.onRuntimeInitialized = function () {
           }
           player.setVolume(vol)
           document.getElementById('volume_range').value = vol;
-          document.getElementById('volume_percent').innerHTML = `${vol}%`
-          // gain, needs gain set in 'play' method
+          document.getElementById('volume_percent').innerHTML = `${leftPadNum(vol, 2)}%`
+          // needs gain set in 'play' method
           if (show_gain) {
             vol = (player.gain.value > 0) ? 0 : 1;
             player.gain.value = vol;
@@ -960,33 +958,29 @@ libopenmpt.onRuntimeInitialized = function () {
       case "KeyP":
         prevButton()
         break;
-      // TODO: dont reuse buttons already used by browser
-      //case "Escape":
-      //  menuButton();
-      //  alert('Esc: menuButton')
-      //  break;
-      //case "F5":
-      //  //event.stopPropagation()
-      //  event.preventDefault();
-      //  playPauseButton();
-      //  break;
-      //case "F11":
-      //  event.preventDefault();
-      //  message
-      //  break;
+      // TODO: dont reuse buttons already used by browser, disabled
+      case "__disabled__Escape":
+        menuButton();
+        alert('Esc: menuButton')
+        break;
+      case "__disabled__F5":
+        //event.stopPropagation()
+        event.preventDefault();
+        playPauseButton();
+        break;
+      case "__disabled__F11":
+        event.preventDefault();
+        message
+        break;
     }
   });
 
-  function libopenmptInfo(details) {
-    let info = '';
-    if (details) {
-      ["library_version", "library_version_is_release", "library_features", "core_version"].forEach(key => {
-        info += ChiptuneJsPlayer.prototype.get_string(key)
-      })
-    } else {
-      info = ChiptuneJsPlayer.prototype.get_string("core_version")
-    }
-    return info
+  function getLibopenmptDetails() {
+    let version
+    ["library_version", "library_version_is_release", "library_features", "core_version"].forEach(key => {
+      version += ChiptuneJsPlayer.prototype.get_string(key)
+    })
+    return version
   }
 
   if (use_drop_files) {
@@ -1041,9 +1035,12 @@ libopenmpt.onRuntimeInitialized = function () {
       if (document.querySelectorAll('#playlist .song').length > 0) {
         document_songs_defined = true;
         document.querySelectorAll('.song').forEach(song => {
-          song.setAttribute("data-modfile", song.dataset.modurl.split(/[/#?]/).pop())
+          if (!song.getAttribute("data-modfile")) {
+            song.setAttribute("data-modfile", song.dataset.modurl.split(/[/#?]/).pop())
+          }
           addListenerToSong(song);
         });
+        document.getElementById('pl_stats').innerHTML = `<strong>${document.querySelectorAll('#playlist .song').length}</strong> songs`
       } else {
         let tracksmsg = document.getElementById('tracksmsg').innerHTML
         document.getElementById('tracksmsg').innerHTML = "<p>No tracks found, loading playlists.html  ...</p>" + tracksmsg
@@ -1057,19 +1054,25 @@ libopenmpt.onRuntimeInitialized = function () {
         this.responseXML.querySelectorAll('.collection').forEach(pl => {
           if (pl.getAttribute('data-modplist')) {
             pl.querySelectorAll('.song').forEach(song => {
-              song.setAttribute("data-modfile", song.dataset.modurl.split(/[/#?]/).pop())
+              if (!song.getAttribute("data-modfile")) {
+                song.setAttribute("data-modfile", song.dataset.modurl.split(/[/#?]/).pop())
+              }
               addListenerToSong(song);
               pl.appendChild(song);
             });
           }
           document.getElementById('playlist').appendChild(pl);
+          document.getElementById('pl_stats').innerHTML = `Total:   
+            <strong>${document.querySelectorAll('#playlist .collection').length}</strong> playlists
+            <strong>${document.querySelectorAll('#playlist .song').length}</strong> songs
+          `
         });
       });
       document.getElementById('pl_links').innerHTML = '<p><a href="?" onclick="location.reload();">BACK</a></p>'
     } else {
       document.getElementById('pl_links').innerHTML = '<p><a href="?more=true" onclick="location.reload();">MORE</a></p>';
-    }
-  }
+    };
+  };
   playlist();
 
   function sortSongs(type, asc) {
@@ -1111,7 +1114,7 @@ libopenmpt.onRuntimeInitialized = function () {
 
 
 window.onload = function () {
-  console.log('DEBUG: onload')
+  console.log('window.onload')
   document.getElementById('stop').disabled = true
   document.getElementById('next').disabled = true
   document.getElementById('prev').disabled = true
@@ -1122,16 +1125,13 @@ window.onload = function () {
   document.getElementById('pattern_row_channel').style.height = `${pattern_max_rows}lh`;
   document.getElementById('volume_range').value = 75
   document.getElementById('volume_percent').innerHTML = "75%"
-  document.getElementById('tempo_factor').innerHTML = "1"
-  document.getElementById('pitch_factor').innerHTML = "1"
-  if (show_notifications && visualSetting !== 'off')   {
-    document.getElementById('notification').innerHTML = "⚠ NOTE: performance sucks with visualizer enabled ;("
-  }
+  document.getElementById('tempo_factor').innerHTML = "1.00"
+  document.getElementById('pitch_factor').innerHTML = "1.00"
   if (show_open_button) {
     document.getElementById('eject').value = "[+] Open"
   }
   if (debug > 1) {
-    document.getElementById('debug').style = 'display:block;width:60%;margin-bottom:15px;';
+    document.getElementById('debug').style = 'display:block; width:60%; margin-bottom:15px;';
     //document.getElementById('debug').style = 'background-color:whitesmoke';
     //document.getElementById('debug_buffer').style = 'background-color:whitesmoke;height:150px;word-wrap:break-word;overflow:scroll'
     //print_nav_timing_data()

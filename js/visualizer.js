@@ -3,16 +3,66 @@
 
 function roundNumDec(num, dec) {
     return Number(Math.round(num + `e${dec}`) + `e-${dec}`);
-}
-
-function visualize(visualSetting) {
+  function colorCalc(i=0) {
+    random = (min, max) => min + Math.floor(Math.random() * (max - min + 1))
+    return {
+      line: {
+        0: "rgb(87, 87, 87)",
+        10: "rgb(21, 150, 27)",
+        20: "rgb(90, 216, 96)",
+        30: "rgb(60, 241, 69)",
+        40: "rgb(201, 189, 87)",
+        50: "rgb(247, 243, 41)",
+        60: "rgb(173, 112, 55)",
+        70: "rgb(247, 137, 63)",
+        80: "rgb(240, 27, 19)",
+        volume: `rgb(${255-(i*10)}, ${255-(i*10)}, ${255-(i*10)})`
+      },
+      invertedbars: {
+        darkred: `rgb(${i + 50}, 50, 50)`,
+        red: `rgb(${i + 150}, 50, 50)`,
+        blue: `rgb(${i * 0.1}, ${i * 1.1}, ${i + 100})`,
+        pink: `rgb(${i + 100}, 5, 150)`,
+        green_red: `rgb(${i + 50}, ${i + 0.1}, 50)`,
+      },
+      frequencybars: {
+        red: `rgb(${i ? i + 100 : 250}, 50, 50)`,
+        green: `rgb(50, ${i ? i + 100 : 150}, 50)`,
+        blue1: `rgb(50, 50, ${i ? (i * 25) + 50 : 250})`,
+        blue2: `rgb(${random(i, 255)},${random(i, 255)},${random(i, 255)})`,
+        blue: `rgb(${i * 0.2}, ${i * 0.2}, ${(i * 5)}`,
+      }
+    }
+  }
+  function colorSwitch(i=0) {
+    if(roundNumDec(i, 0) % 100 == 0) {
+      canvasCtx.reset();
+      canvasCtx.fillStyle = color['palette']['lilac'];
+    } else if(roundNumDec(i, 0) % 500 == 0) {
+      canvasCtx.reset();
+      canvasCtx.fillStyle = color['palette']['lightgreen'];
+    } else {
+      canvasCtx.reset();
+      canvasCtx.fillStyle = colorCalc()['bars']['darkred'];
+    }
+  }
   //const visualSetting = visualSelect.value;
   // Set up canvas context for visualizer
   const canvas = document.getElementById("canvas");
   const canvasCtx = canvas.getContext("2d");
-  //const WIDTH = canvas.width;
-  //const HEIGHT = canvas.height;
-  var drawVisual
+  const color = {
+    black: "rgb(10, 10, 10)",
+    carbon: "rgb(30, 30, 30)",
+    white: "rgb(255, 255, 255)",
+    red: "rgb(240, 0, 0)",
+    darkblue: "rgb(0, 0, 180)",
+    grayblue: "rgb(91, 132, 247)",
+    lightgreen: "rgb(55, 255, 0)",
+    gray: "rgb(87, 87, 87)",
+    brightgray:"rgb(230, 230, 230)",
+    lightgray: "rgb(200, 200, 200)",
+    lilac: "rgb(100, 100, 200)",
+  }
   //console.log('DEBUG: visualSetting=', visualSetting);
 
   if (visualSetting === "sinewave") {

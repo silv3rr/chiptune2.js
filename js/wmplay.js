@@ -347,6 +347,31 @@ libopenmpt.onRuntimeInitialized = function () {
     document.getElementById('current_tempo').innerHTML = `tempo: ${current_tempo}`
   }
 
+  function patternViewer() {
+    //
+    // Get data
+    //
+    let format_pattern_result = ''    
+    let format_pattern_row_channel = []
+    let format_get_current_channel_vu_mono = []
+    let format_last_row = format_row
+    format_row = leftPadNum(numOrZero(player.getCurrentRow() + 1), 2)
+    format_channels = ''
+    /*
+      //let left = ''
+      //let right = ''
+      //let mono = ''
+      // stereo vu
+      left += `<strong>${i}:</strong> ${player.module_get_current_channel_vu_left(i)} `
+      right += `<strong>${i}:</strong> ${player.module_get_current_channel_vu_right(i)} `
+      document.getElementById('current_channel_vu_left').innerHTML = left
+      document.getElementById('current_channel_vu_right').innerHTML = right   
+      console.log(`DEBUG: player.module_get_current_channel_vu_left ${i} = ${player.module_get_current_channel_vu_left(i)}`)
+      // mono vu
+      mono += `<strong>${i}:</strong> ${player.module_get_current_channel_vu_mono(i)} `
+      document.getElementById('current_channel_vu_mono').innerHTML = mono
+    */
+    //format_pattern_row_all_channels.forEach(row => { ... })
     for (let i = 0; i < player.getChannels(); i++) {
       format_channels += `${(i === 0 ? '\u00A0'.repeat(6) : '\u00A0')} <span id="channel">channel ${leftPadNum(i + 1, 2)}: ${(i < player.getChannels() - 1 ? ' | ' : '')}</span>`
       format_pattern_row_channel[i] = player.formatPatternRowChannel(player.currentPlayingNode.modulePtr, player.getCurrentPattern(), player.getCurrentRow(), i)
@@ -366,29 +391,13 @@ libopenmpt.onRuntimeInitialized = function () {
     }
     all_channels_vu_mono = format_get_current_channel_vu_mono
     //console.log('DEBUG: all_channels_vu_mono =', all_channels_vu_mono)
-  }
-
-  function showSongData() {
-    //format_pattern_row_all_channels.forEach(row => { .. })
-    //document.getElementById('time').innerHTML = `time: <strong>${format_position_mm_ss}</strong><br>`;
-    //document.getElementById('progress').innerHTML = `<p><progress value="${position_seconds}" max="${duration_seconds}"></progress> &nbsp; (${position_percent}&#37;)</p>`;
-    //document.getElementById('current_row').innerHTML = `row: ${format_row}`
-    document.getElementById('current_channels').innerHTML = `channels: ${current_channels}`
-    document.getElementById('current_bpm').innerHTML = `bpm: ${format_bpm}`
-    document.getElementById("position_range").value = roundNumDec(position_seconds, 0)
-    document.getElementById("position_time").innerHTML = `-${format_position_time}`
-    document.getElementById("position_percent").innerHTML = `(${position_percent}%)`
-    document.getElementById('pitch_factor').innerHTML = format_pitch_factor
-    document.getElementById('tempo_factor').innerHTML = format_tempo_factor
-    document.getElementById('current_order').innerHTML = `order: <span id='value-highlight'>${format_order}</span>`
-    document.getElementById('current_pattern').innerHTML = `pattern: ${format_pattern}`
-    document.getElementById('current_speed').innerHTML = `speed: ${current_speed}`
-    document.getElementById('current_tempo').innerHTML = `tempo: ${current_tempo}`
-    document.getElementById('pattern').style.height = `${7 + pattern_max_rows}lh`
+    //
+    // Show data
+    //
+    //document.getElementById('pattern').style.height = `${7 + pattern_max_rows}lh`
     let pattern_length = format_pattern_row_all_channels.length
-    let format_pattern_result = ''
-
-    // TODO: draw highlight bar every 5 rows
+    //let format_pattern_result = ''
+    // TODO: add highlight bar for current row, and row divider every 5 rows
     /*
     if (i % 5 == 0) {
       format_pattern_result += `<span style="color:white;background-color:#414141;"><strong>${format_pattern_row_all_channels[i] ? format_pattern_row_all_channels[i] + '&nbsp;\n' : ''}</strong></span>`
@@ -396,13 +405,11 @@ libopenmpt.onRuntimeInitialized = function () {
       format_pattern_result += format_pattern_row_all_channels[i] ? format_pattern_row_all_channels[i] + '&nbsp;\n' : ''
     }
     */
-
     for (let i = pattern_length - pattern_max_rows; i < pattern_length; i++) {
       format_pattern_result += format_pattern_row_all_channels[i] ? format_pattern_row_all_channels[i] + ' \n' : ''
     }
     document.getElementById('channels').innerHTML = format_channels
     document.getElementById('pattern_row_channel').innerHTML = format_pattern_result
-
     for (let i = 0; i < all_channels_vu_mono.length; i++) {
       if (document.getElementById('meter_' + i)) {
         document.getElementById('meter_' + i).setAttribute('value', all_channels_vu_mono[i])

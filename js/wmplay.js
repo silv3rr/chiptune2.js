@@ -587,60 +587,34 @@ libopenmpt.onRuntimeInitialized = function () {
     document.getElementById('message_details').innerHTML = format_message
     document.getElementById('samples_details').innerHTML = format_samples
     document.getElementById('instruments_details').innerHTML = format_instruments
-    document.getElementById('song_info').innerHTML = format_info
-  }
-
-  function afterLoad(path, buffer) {
-    player.play(buffer);
-    player.module_ctl_set_text('play.at_end', play_at_end)
-    duration_seconds = numOrZero(player.duration())
-    metadata(path);
-    setPlayButtonId();
-    //if volume meter is enabled, we can use volMeterData.volume volMeterData.buffer
-    if (enable_volume_meter) {
-     
-      initVolMeter(player).then(() => {
-        //TODO: use init instead of startAudio
-        startAudio(player.context, player);
-        isPlaying = true;
-
-        // TODO: vu/visualizer: after 1 song, next song has slower & slower perf...
-        //       no visualizers -- only enable_volume_meter + volMeter (volMeterData) is OK
-        //       added buf check to processor
-
-        // vu.js (new)
-        if (show_vu) {
-          initVU();
-        }
-      })
-
-      // connect to old/orig volumemeter script (using scriptProcessorNode)
-      if (show_old_vu) {
-        if (!meter) {
-          meter = createAudioMeter(player.context);
-          initVU(player)
-        }
-        if (meter.numberOfInputs != 1 || meter.numberOfOutput != 1) {
-          player.currentPlayingNode.connect(meter)
-        }
-        if (debug > 2) {
-          if (meter.buf) {
-            for (var i=0; i<meter.buf.length; i++) {
-              document.getElementById('debug').innerHTML = meter.buf[i]
-            }
-          }
-          //console.log('DEBUG: meter.volume',  meter.volume)
-          //let sum_vol = roundNumDec((meter.volume * 100)*2*2, 0);
+  function getGain() {
+    try {
+      //gainNode.gain.value = sum_vol
+      gainNode = {
+        gain: {
+          value: all_channels_vu_mono.reduceRight((acc, cur) => acc + cur, 0),
+          minValue: 0,
+          maxValue: 5,
         }
       }
-      if (show_libopenmpt === 'marquee') {
-        let scroller = document.getElementById("scroller").innerHTML
-        document.getElementById("scroller").innerHTML = scroller.replace('</marquee>', ` (${libopenmptInfo(false)}) </marquee>`)
-      }
-      if (show_libopenmpt === 'bottom') {
-        document.getElementById("bottom").innerHTML = libopenmptInfo(false)
-      }
+      gainNode = player.context.gain
+      //debug
+      //document.getElementById('debug').innerHTML += sum_vol + ' ';
+      //document.getElementById('debug').innerHTML =  all_channels_vu_mono.reduceRight((acc, cur) => acc + cur, 0)
+      //console.log('DEBUG: player.context.createGain() =',  player.context.createGain()) ' player.context.destination =', player.context.destination, ' player.currentPlayingNode =', player.currentPlayingNode)
+
+      //gainNode = player.context.createGain()
+      //gainNode = player.context.gain
+      //gainNode.connect(player.context.destination)
+
+      //player.currentPlayingNode.gain.connect(player.context.destination)
+      //console.log('DEBUG: gainNode =', gainNode.gain, ' player.gain =', player.gain)
+      //console.log('DEBUG: gainNode =', gainNode, ' analyser =', analyser, ' player', player)
+      document.getElementById('debug').innerHTML = player.getGain()
+    } catch {
+      console.error("gainNode")
     }
+  }
 
     //console.log('DEBUG: getGlobalVolume', player.getGlobalVolume());
     //console.log('DEBUG: setGlobalVolume', player.setGlobalVolume(0.1));

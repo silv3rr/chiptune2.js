@@ -308,7 +308,10 @@ libopenmpt.onRuntimeInitialized = function () {
     }    
   }
 
-  function getSongData() {
+  function currentSongInfo() {
+    //
+    // Get data
+    //
     //let duration_seconds = numOrZero(player.duration())
     position_seconds = numOrZero(player.getCurrentTime())
     position_percent = Math.floor((position_seconds / duration_seconds) * 100)
@@ -316,34 +319,33 @@ libopenmpt.onRuntimeInitialized = function () {
     let format_remaining_min = leftPadNum(Math.floor(remaining_seconds / 60), 2)
     let format_remaining_sec = leftPadNum(Math.floor(remaining_seconds % 60), 2)
     let format_position_mm_ss = `${format_remaining_min}:${format_remaining_sec}`
-    let format_pattern_row_channel = []
-    let format_get_current_channel_vu_mono = []
-    let format_last_row = format_row
-    //let left = ''
-    //let right = ''
-    //let mono = ''
     format_position_time = format_position_mm_ss ? format_position_mm_ss : '00:00'
-    format_tempo_factor = roundNumDec(player.module_ctl_get_floatingpoint('play.tempo_factor'), 2)
-    format_pitch_factor = roundNumDec(player.module_ctl_get_floatingpoint('play.pitch_factor'), 2)
-    format_row = leftPadNum(numOrZero(player.getCurrentRow() + 1), 2)
+    format_tempo_factor = player.module_ctl_get_floatingpoint('play.tempo_factor').toFixed(2)
+    format_pitch_factor = player.module_ctl_get_floatingpoint('play.pitch_factor').toFixed(2)
     format_order = leftPadNum(numOrZero(player.getCurrentOrder()), 2)
     format_pattern = leftPadNum(numOrZero(player.getCurrentPattern()), 2)
     format_bpm = roundNumDec(numOrZero(player.getCurrentBPM()), 0)
     current_channels = leftPadNum(numOrZero(player.getCurrentChannels()), 2)
     current_speed = leftPadNum(numOrZero(player.getCurrentSpeed()), 2)
     current_tempo = leftPadNum(numOrZero(player.getCurrentTempo()), 3)
-    format_channels = ''
-
-    // stereo vu
-    //left += `<strong>${i}:</strong> ${player.module_get_current_channel_vu_left(i)} `     
-    //right += `<strong>${i}:</strong> ${player.module_get_current_channel_vu_right(i)} `
-    //document.getElementById('current_channel_vu_left').innerHTML = left
-    //document.getElementById('current_channel_vu_right').innerHTML = right   
-    //console.log(`DEBUG: player.module_get_current_channel_vu_left ${i} = ${player.module_get_current_channel_vu_left(i)}`)
-
-    // mono
-    //document.getElementById('current_channel_vu_mono').innerHTML = mono
-    //mono += `<strong>${i}:</strong> ${player.module_get_current_channel_vu_mono(i)} `
+    //
+    // Show data
+    //
+    //document.getElementById('time').innerHTML = `time: <strong>${format_position_mm_ss}</strong><br>`;
+    //document.getElementById('progress').innerHTML = `<p><progress value="${position_seconds}" max="${duration_seconds}"></progress> &nbsp; (${position_percent}&#37;)</p>`;
+    //document.getElementById('current_row').innerHTML = `row: ${format_row}`
+    document.getElementById('current_channels').innerHTML = `channels: ${current_channels}`
+    document.getElementById('current_bpm').innerHTML = `bpm: ${format_bpm}`
+    document.getElementById("position_range").value = roundNumDec(position_seconds, 0)
+    document.getElementById("position_time").innerHTML = `-${format_position_time}`
+    document.getElementById("position_percent").innerHTML = `(${position_percent}%)`
+    document.getElementById('pitch_factor').innerHTML = format_pitch_factor
+    document.getElementById('tempo_factor').innerHTML = format_tempo_factor
+    document.getElementById('current_order').innerHTML = `order: <span id='value-highlight'>${format_order}</span>`
+    document.getElementById('current_pattern').innerHTML = `pattern: ${format_pattern}`
+    document.getElementById('current_speed').innerHTML = `speed: ${current_speed}`
+    document.getElementById('current_tempo').innerHTML = `tempo: ${current_tempo}`
+  }
 
     for (let i = 0; i < player.getChannels(); i++) {
       format_channels += `${(i === 0 ? '\u00A0'.repeat(6) : '\u00A0')} <span id="channel">channel ${leftPadNum(i + 1, 2)}: ${(i < player.getChannels() - 1 ? ' | ' : '')}</span>`

@@ -1,8 +1,14 @@
 // Source: https://github.com/mdn/webaudio-examples/blob/main/voice-change-o-matic/scripts/app.js
-// modfied app.js to use volmeter buf instead of analyser buffer
+// modfied app.js to use volmeter buffer instead of analyser
 
-function roundNumDec(num, dec) {
+function visualize(visualSetting) {
+  //console.log('DEBUG: visualizer visualSetting =', visualSetting)
+  if (!volMeterData.buffer) {
+    return false
+  }
+  function roundNumDec(num, dec) {
     return Number(Math.round(num + `e${dec}`) + `e-${dec}`);
+  }
   function colorCalc(i=0) {
     random = (min, max) => min + Math.floor(Math.random() * (max - min + 1))
     return {
@@ -46,10 +52,15 @@ function roundNumDec(num, dec) {
       canvasCtx.fillStyle = colorCalc()['bars']['darkred'];
     }
   }
+  
   //const visualSetting = visualSelect.value;
+
   // Set up canvas context for visualizer
   const canvas = document.getElementById("canvas");
   const canvasCtx = canvas.getContext("2d");
+  const WIDTH = canvas.width;
+  const HEIGHT = canvas.height;
+
   const color = {
     black: "rgb(10, 10, 10)",
     carbon: "rgb(30, 30, 30)",
@@ -63,174 +74,139 @@ function roundNumDec(num, dec) {
     lightgray: "rgb(200, 200, 200)",
     lilac: "rgb(100, 100, 200)",
   }
+
+  if (drawVisual) {
+    cancelAnimationFrame(drawVisual);
+  }
+
+  //reset canvas
+  canvasCtx.reset()
+  canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+  canvasCtx.fillStyle = color['black']
+  canvasCtx.strokeStyle = color['brightgray']
+  canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+
   //console.log('DEBUG: visualSetting=', visualSetting);
-
   if (visualSetting === "sinewave") {
-    //analyser.fftSize = 2048;
-    //const bufferLength = analyser.fftSize;
-    // We can use Float32Array instead of Uint8Array if we want higher precision
-    // const dataArray = new Float32Array(bufferLength);
-    // const dataArray = new Uint8Array(bufferLength);
-    
-    const bufferLength = volMeterData.buffer ? volMeterData.buffer.length : 0
-    //const dataArray = volMeterData.buffer ? volMeterData.buffer : 0
-    const dataArray = volMeterData.buffer 
-
-    //canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
+    canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
     const draw = () => {
+      const bufferLength = volMeterData.buffer ? volMeterData.buffer.length : 0
+      const dataArray = volMeterData.buffer ? volMeterData.buffer : 0 
       drawVisual = requestAnimationFrame(draw);
-      //analyser.getByteTimeDomainData(dataArray);
-      //let dataArray = buf
-      //canvasCtx.fillStyle = "rgb(200, 200, 200)";
-      canvasCtx.fillStyle = "rgb(255, 255, 255)";
-      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
+      canvasCtx.strokeStyle = color['black']
+      canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
       canvasCtx.lineWidth = 2;
-      canvasCtx.strokeStyle = "rgb(0, 0, 0)";
+      canvasCtx.strokeStyle = color['lightgray'];
       canvasCtx.beginPath();
-      const sliceWidth = (canvas.width * 1.0) / bufferLength;
+      const sliceWidth = (WIDTH * 1.0) / bufferLength;
       let x = 0;
       for (let i = 0; i < bufferLength; i++) {
         //const v = dataArray[i] / 128.0;
         const v = dataArray[i];
-        const y = (v * canvas.height) / 2;
-
+        const y = (v * HEIGHT) / 2;
         if (i === 0) {
-          canvasCtx.moveTo(x, (canvas.height/2)-y);
+          canvasCtx.moveTo(x, (HEIGHT/2)-y);
         } else {
-          canvasCtx.lineTo(x, (canvas.height/2)-y);
+          canvasCtx.lineTo(x, (HEIGHT/2)-y);
         }
-
         x += sliceWidth;
       }
-      //canvasCtx.lineTo(canvas.width, canvas.height);
+      //canvasCtx.lineTo(WIDTH, HEIGHT);
       canvasCtx.stroke();
     };
-    //draw();
-    requestAnimationFrame(draw);
+    draw();
   } else if (visualSetting === "frequencybars") {
-    //analyser.fftSize = 256;
-    //const bufferLengthAlt = analyser.frequencyBinCount;
-    // See comment above for Float32Array()
-    //const dataArrayAlt = new Uint8Array(bufferLengthAlt);
-    const bufferLengthAlt = volMeterData.buffer ? volMeterData.buffer.length : 0
-    const dataArrayAlt = volMeterData.buffer ? volMeterData.buffer : 0
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-    const drawAlt = () => {
-      drawVisual = requestAnimationFrame(drawAlt);
-      //analyser.getByteFrequencyData(dataArrayAlt);
-      canvasCtx.fillStyle = "rgb(0, 0, 0)";
-      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-      //const barWidth = (WIDTH / bufferLengthAlt) * 2.5;
-      const barWidth = (canvas.width / bufferLengthAlt) * 25;
+    canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+    const drawFreqBars = () => {
+      const bufferLength = volMeterData.buffer ? volMeterData.buffer.length : 0
+      const dataArray = volMeterData.buffer ? volMeterData.buffer : 0
+      drawVisual = requestAnimationFrame(drawFreqBars);
+      canvasCtx.fillStyle = color['carbon']
+      canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+      const barWidth = (WIDTH / bufferLength) * 5;  //default: *2.5, 5-bars: *25;
       let x = 0;
-      for (let i = 0; i < bufferLengthAlt; i++) {
-        //const barHeight = dataArrayAlt[i];
-        const barHeight = roundNumDec(dataArrayAlt[i],2) * 500;
-        canvasCtx.fillStyle = "rgb(" + (barHeight + 100) + ", 50, 50)";
-        canvasCtx.fillRect(
-          x,
-          canvas.height - barHeight / 2,
-          barWidth,
-          barHeight / 2
-        );
-        x += barWidth + 1;
+      for (let i = 0; i < bufferLength; i++) {
+        // const barHeight = dataArray[i];
+        const barHeight = roundNumDec(dataArray[i], 2) * 500;
+        if (barHeight > HEIGHT-5) {
+          canvasCtx.fillStyle = color['red']
+          canvasCtx.fillRect(x, HEIGHT - (barHeight / 2) - 1, barWidth, barHeight / 2);
+        }
+        if (barHeight % 2 === 0) {
+          canvasCtx.fillStyle = color['darkblue']
+          canvasCtx.fillRect(x, (HEIGHT - barHeight / 2), barWidth, barHeight / 4);
+          canvasCtx.fillStyle = colorCalc(barHeight)['frequencybars']['blue']
+          canvasCtx.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
+        } else {
+          canvasCtx.fillStyle = colorCalc(barHeight)['frequencybars']['blue']
+          canvasCtx.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
+          x += barWidth;
+        }
+        //canvasCtx.fillStyle = color['darkblue']
+        //canvasCtx.fillRect(x, HEIGHT - barHeight / 4, barWidth + 1, barHeight / 4);
       }
     };
-    drawAlt();
-
+    drawFreqBars();
   } else if (visualSetting === "line") {
     function drawLine() {
-      let vol = roundNumDec(volMeterData.volume, 2)
-      //let vol = roundNumDec((volMeterData.volume *2*2), 2)
-      canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
       drawVisual = requestAnimationFrame(drawLine);
-      //canvasCtx.fillStyle = "rgb(230, 230, 230)";
-      canvasCtx.fillStyle = "rgb(255, 255, 255)";
-      canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-      canvasCtx.lineWidth = 3 + (vol * 50);
-      //canvasCtx.strokeStyle = `rgb(${255-(volume*10)}, ${255-(volume*10)}, ${255-(volume*10)})`;
-      canvasCtx.strokeStyle = "rgb(87, 87, 87)";
-      line_color = {
-        0: "rgb(87, 87, 87)",
-        10: "rgb(21, 150, 27)",
-        20: "rgb(90, 216, 96)",
-        30: "rgb(60, 241, 69)",
-        40: "rgb(201, 189, 87)",
-        50: "rgb(247, 243, 41)",
-        60: "rgb(173, 112, 55)",
-        70: "rgb(247, 137, 63)",
-        80: "rgb(240, 27, 19)",
-      }
-      let round_vol = roundNumDec((volMeterData.volume*100)*2*2, 0);
-      let vol_10 = Math.round(round_vol/10)*10
-      vol_10 = (vol_10>80) ? 80 : vol_10
+      canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+      canvasCtx.fillStyle = color['brightgray']
+      canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+      //canvasCtx.strokeStyle = color['gray'];
+      let vol = roundNumDec(volMeterData.volume, 2)
+      let round_vol = roundNumDec((volMeterData.volume*100)*1.75, 0);
+      let tens_vol = Math.round(round_vol/10)*10
+      let norm_tens_vol = (tens_vol>80) ? 80 : tens_vol
       //console.log(vol_10, line_color[vol_10])
-
-      // Example:
-      /*
-      //const sliceWidth = (WIDTH * 1.0) / volume;
-      //const sliceWidth = volume;
-      //let x = 0;
-      //const v = volume // / 128.0;
-      //const y = (v * HEIGHT)  // / 2;
-      const y = (volume * 10) * (HEIGHT /2);
-      canvasCtx.moveTo(x, y);
-      canvasCtx.lineTo(x, y);
-      canvasCtx.lineTo(WIDTH, HEIGHT / 2);
-      canvasCtx.stroke();
-      //x += sliceWidth;
-      */            
-
-      canvasCtx.strokeStyle = line_color[vol_10]
+      let m = 8
+      let y = ((vol*m) * (HEIGHT/2))*0.4;
+      if (y > HEIGHT-1) {
+        y = HEIGHT-3;
+      }
+      canvasCtx.lineWidth = 3 + (vol * 50);
+      canvasCtx.strokeStyle = colorCalc()['line'][norm_tens_vol]
       canvasCtx.beginPath();
-      const y = ((vol*8) * (canvas.height/2));
-      canvasCtx.moveTo(0, canvas.height-y);
-      canvasCtx.lineTo(canvas.width, canvas.height-y);
+      canvasCtx.moveTo(0, HEIGHT-y);
+      canvasCtx.lineTo(WIDTH, HEIGHT-y);
       canvasCtx.stroke();
 
-      // add 2 more gray lines before/after
-      
-      /* [9, 7].forEach(i => {
-        canvasCtx.strokeStyle = "rgb(87, 87, 87)";
+      // uncomment to add 2 more gray lines before/after
+      [m-1, m+1].forEach(i => {
+        let y = ((vol*i) * (HEIGHT/2))*0.4;
+        if (y > HEIGHT-1) {
+          y = HEIGHT-1;
+        } 
         canvasCtx.lineWidth = 2;
+        canvasCtx.strokeStyle = color['gray'];
         canvasCtx.beginPath();
-        const y = ((vol*i) * (canvas.height/2));
-        canvasCtx.moveTo(0, canvas.height-y);
-        canvasCtx.lineTo(canvas.width, canvas.height-y1);
+        canvasCtx.moveTo(0, HEIGHT-y);
+        canvasCtx.lineTo(WIDTH, HEIGHT-y);
         canvasCtx.stroke();
-      */;
-
-      // clear canvas every 5 elements (needs x / buf array)
-      //if (x % 5 == 0) {
-      //  canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-      //}
+      });
     }
     drawLine()
-  } else if (visualSetting === "bars") {
-      // draw bars (same as "frequencybars")
-      function drawBars() {
-        drawVisual = requestAnimationFrame(drawBars);
-        const barWidth = canvas.width * 2.5;
-        let barHeight;
-        barHeight = volMeterData.volume / 2
-        let x = 0;
-        canvasCtx.fillStyle = `rgb(${barHeight + 100} 50 50)`;
-        canvasCtx.fillRect(x, canvas.height - barHeight / 2, barWidth, barHeight);
-        x += barWidth + 1;
+  } else if (visualSetting === "invertedbars") {
+    function drawInvBars() {
+      const bufferLength = volMeterData.buffer ? volMeterData.buffer.length : 0
+      const dataArray = volMeterData.buffer ? volMeterData.buffer : 0
+      drawVisual = requestAnimationFrame(drawInvBars);
+      const barWidth = WIDTH * 2.5;
+      for (let i = 0; i < bufferLength; i++) {
+        // barHeight = dataArray[i];
+        // barHeight = volMeterData.volume / 2
+        const barHeight = roundNumDec(dataArray[i], 2) * 500;          
+        canvasCtx.fillStyle = colorCalc(i)['invertedbars']['red'];
+        canvasCtx.fillRect(0, HEIGHT - barHeight / 2, barWidth, barHeight);
       }
-      drawBars()
-
-  } else if (visualSetting === "off") {
-      //document.getElementById('vol').innerHTML = "Visualization: <strong>off!<//strong>";
-      // clear canvas
-      //canvasCtx.height = '0'
-      //canvasCtx.width = '0';
-      //canvasCtx.fillStyle = "#ffdcdc";
-      //canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
-      //canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
-      // disable
-      //document.getElementById('visualizer').style.display = 'none';
-      console.log(visualSetting, visualSetting)
     }
+    drawInvBars()
+  } else if (visualSetting === "off") {
+    canvasCtx.reset()
+    canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
+    canvasCtx.strokeStyle = color['black']
+    canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+    document.getElementById('visualizer').style.display = 'none';
+    console.log(`visualizer: disabled (${visualSetting})`)
+  }
 }

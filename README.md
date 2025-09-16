@@ -1,10 +1,10 @@
 # WMPlay
 
-Web Mod Player (wmplay.js) requires chip2une2.js, chiptune2a.js and libopenmpt.js (tested with 0.6.6 and 0.7.13)
+Web Mod Player (wmplay.js) requires chiptune2.js, chiptune2a.js and libopenmpt.js (tested with 0.6.6 and 0.7.13)
 
-View live [example here](https://0008086.xyz/chiptune2.js/)
+View [demo](https://0008086.xyz/chiptune2.js/)
 
-See [chiptune2.js/README.md](https://github.com/deskjet/chiptune2.js/blob/master/README.md) for original README
+_See [chiptune2.js/README.md](https://github.com/deskjet/chiptune2.js/blob/master/README.md) for original README_
 
 ## Settings
 
@@ -19,7 +19,8 @@ Set a theme from the drop down list of the top left:
 
 - OPTIONS:
    - play_next: auto plays next song in playlist (default `off`)
-   - show_vu: show vu meter (default `off`) *_⚠ performance issues_
+   - show_vu: show vu meter (default `on`)
+   - show_visualizer show visualization (default `on`: random)
 
 ### Configuration
 
@@ -52,6 +53,8 @@ HTML5 data attributes are used to load module file and metadata, set inside an `
 
 Only `data-modurl` is required and can both be a local file or link to e.g. [modarchive](modarchive.org) or [modland](modland.com)
 
+Use mm:ss for `modtime` and unit for `modsize` is kilobytes.
+
 Add the articles with mod data to a "collection".
 
 ``` html
@@ -69,10 +72,12 @@ Add the html to index.html inside `<div id="playlist">`, or to separate playlist
 
 ## Default song
 
-If optional `default_modurl` is not set, the first file will be played.
+If optional `default_modurl` is not set, the first or random song will be played, depending on settings.
 
 ``` html
-   <script type="text/javascript">default_modurl = "https://api.modarchive.org/downloads.php?moduleid=57925#space_debris.mod";</script>
+   <script type="text/javascript">
+      default_modurl = "https://api.modarchive.org/downloads.php?moduleid=57925#space_debris.mod";
+   </script>
 ```
 
 ## Changes

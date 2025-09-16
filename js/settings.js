@@ -12,11 +12,12 @@ const select_options = {
     "shuffle": shuffle,
     "play_next": play_next,
     "show_vu": show_vu,
+    "show_visualizer": show_visualizer,
   },  
   CONFIG: {
     "repeat": repeat,
-    "visualizer": visualSetting,
     "pattern_max_rows": pattern_max_rows,
+    "visualSetting": visualSetting,
   }
 }
 

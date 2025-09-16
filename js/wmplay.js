@@ -32,10 +32,11 @@ var enable_volume_meter = false
 
 var shuffle = true
 var play_next = true
-var show_vu
+var show_visualizer = true
 
 var toggle_sort = { file: true, title: true, date: true, time: true, size: true }
 var volMeterData = { volume: 0, buffer: 0, clipping: false }
+var drawVisual
 
 
 window['libopenmpt'] = {}
@@ -214,6 +215,19 @@ libopenmpt.onRuntimeInitialized = function () {
     return num.toString().padStart(len, '0')
   }
 
+
+  function getVisualSetting() {
+    let setting
+    if (visualSetting === 'random') {
+      let idx = Math.floor(Math.random() * visuals.length)
+      setting = visuals[idx]
+    } else {
+      setting = visualSetting
+    }
+    document.getElementById("visual_name").innerHTML = `"${setting}"`
+    return setting
+  }
+
   function setModData() {
     document.querySelectorAll(".song").forEach(e => {
       if (e.getAttribute("data-modurl") === modurl) {
@@ -280,22 +294,8 @@ libopenmpt.onRuntimeInitialized = function () {
     document.getElementById('prev').disabled = false
     document.getElementById('open').style.display = "none"
     document.querySelectorAll('#pitch,#tempo').forEach(e => e.value = 1);
-    if (show_vu) {
-      document.getElementById('vu').style.display = 'block'
-      document.getElementById('vu_title').innerHTML = "<h2 style='margin-bottom:0px'>VU Meter</h2>";
-      // mono
-      document.getElementById('vu-right').style.display = 'none';
-      document.getElementById('vu-left').innerHTML = `${'<div></div>'.repeat(10)}`
-      document.getElementById('vu-right').style.display = 'none';
-    }
-    if (visualSetting !== "off") {
-      //document.querySelector(".visualizer").style.backgroundColor = 'lightgray';
-      //document.getElementById('visualizer').style.width = '55%';
-      document.getElementById('visualizer').style.backgroundColor = 'white';
-      document.getElementById('visualizer').style.display = 'block';
-      document.getElementById('visualizer_title').innerHTML = "<h2 style='margin-bottom:0px'>Visualizer</h2>";
-      document.getElementById('canvas').style.backgroundColor = 'white';
-    }
+    document.getElementById('change_visual').innerHTML = '(<button class="btn-txt" id="visualizer_next">change</button>)'
+    document.querySelector('#change_visual').addEventListener('click', function (e) { visualize(getVisualSetting()); });
     if (debug > 3) {
       document.getElementById('debug').innerHTML = `
         <div id="debug_volume">${volMeterData.volume}</div>

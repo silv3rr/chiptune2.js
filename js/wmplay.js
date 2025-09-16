@@ -20,7 +20,9 @@ const show_gain = false
 const show_old_vu = false
 const visualSetting = "off"  // off|sinewave|line|frequencybars|bars(WIP)
 
-const old_lib_version = false
+const visuals = ['sinewave', 'line', 'frequencybars', 'invertedbars']
+const visualSetting = "random"  // "off", "random", or visuals[i]
+const use_drop_files = false
 const use_gain_node = false
 const use_libopenmpt_volume = false
 
@@ -45,8 +47,8 @@ libopenmpt.locateFile = function (filename) {
 
 
 libopenmpt.onRuntimeInitialized = function () {
-  var fileaccess = document.querySelector('*');
-  var file
+  //var fileaccess = document.querySelector('*');
+  //var file
   var intervalID
   var player
   var format_position_time
@@ -971,20 +973,19 @@ libopenmpt.onRuntimeInitialized = function () {
     return info
   }
 
-  // disable dropping files
-  /*
-  fileaccess.ondrop = function (e) {
-    e.preventDefault();
-    file = e.dataTransfer.files[0];
-    setDefaults();
-    setModData();
-    init();
-    player.load(file, afterLoad.bind(this, file.path));
-  }
+  if (use_drop_files) {
+    fileaccess.ondrop = function (e) {
+      e.preventDefault();
+      file = e.dataTransfer.files[0];
+      setDefaults();
+      setModData();
+      init();
+      player.load(file, afterLoad.bind(this, file.path));
+    }
 
-  fileaccess.ondragenter = function (e) { e.preventDefault(); }
-  fileaccess.ondragover = function (e) { e.preventDefault(); }
-  */
+    fileaccess.ondragenter = function (e) { e.preventDefault(); }
+    fileaccess.ondragover = function (e) { e.preventDefault(); }
+  }
 
   document.querySelector('input[name=files]').addEventListener('change', function (evt) {
     modurl = null

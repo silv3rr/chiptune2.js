@@ -11,7 +11,7 @@ const play_at_end = "stop"
 const pattern_max_rows = 10
 const default_playlist = true
 const playlist_file = 'playlists.html'
-const valid_extentions = 'it|dmf|mod|mtm|s3m|xm'
+const valid_extentions = 'it|dmf|mod|mtm|s3m|xm|zip'
 
 const show_libopenmpt = 'bottom'  // bottom|marquee
 const show_notifications = true
@@ -498,6 +498,9 @@ libopenmpt.onRuntimeInitialized = function () {
     // fallback to moddata, if available
     if ((format_filename == '' || format_filename.length < 3) && modfile) {
       format_filename = modfile
+    }
+    if (format_filename.match('.zip$', 'i') && modfile) {
+      format_filename += ` (${modfile})`
     }
     if (!size || size <= 0 && modsize) {
       size = modsize

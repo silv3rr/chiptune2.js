@@ -8,6 +8,69 @@
 
 const OPENMPT_MODULE_RENDER_MASTERGAIN_MILLIBEL = 1
 
+// override load to add zip support
+
+ChiptuneJsPlayer.prototype.load = function(input, callback) {
+  if (this.touchLocked) {
+    this.unlock();
+  }
+  var player = this;
+  if (input instanceof File) {
+    var reader = new FileReader();
+    reader.onload = function() {
+      return callback(reader.result); // no error
+    }.bind(this);
+    reader.readAsArrayBuffer(input);
+  } else {
+    //console.log('DEBUG: input=', input)
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', input, true);
+    xhr.responseType = 'arraybuffer';
+    if (input.endsWith('.zip')) {
+      //console.log('DEBUG: input is .zip')
+      let re = new RegExp(`\.(${valid_extentions})$`, 'i')
+      // JSZipUtils.getBinaryContent(input, function(err, data) {
+      //   if (err) {
+      //     throw err; // or handle err
+      //   }
+      //   JSZip.loadAsync(data).then(function () {
+      //     //console.log(data)
+      //     return callback(data); // no error
+      //   });
+      // });
+      xhr.onload = function(e) {
+        if (xhr.status === 200) {
+          JSZip.loadAsync(xhr.response).then(function (zip) {
+            for (file in zip.files) {
+              if (file.match(re)) {
+                zip.file(file).async("ArrayBuffer").then(function(data) {
+                  console.log(data)
+                  return callback(data);
+                });
+              }
+            }
+          });
+        }
+      }.bind(this);
+    } else {
+      xhr.onload = function(e) {
+        if (xhr.status === 200) {
+          return callback(xhr.response); // no error
+        } else {
+          player.fireEvent('onError', {type: 'onxhr'});
+        }
+      }
+    }
+    xhr.onerror = function() {
+      player.fireEvent('onError', {type: 'onxhr'});
+    };
+    xhr.onabort = function() {
+      player.fireEvent('onError', {type: 'onxhr'});
+    };
+    xhr.send();
+  }
+}
+
 // old attempt to add gain, doesnt work
 /*
 ChiptuneJsPlayer.prototype.unlock = function() {
@@ -281,4 +344,3 @@ ChiptuneJsPlayer.prototype.getVolume = function() {
     return [uint32Array[0] , millibelToPercentage(uint32Array[0])]
   }
 };
-

@@ -85,7 +85,7 @@
     --border-color: var(--cubic-cyan);
     --value-highlight-color: var(--cubic-lightblue);
     --button-color: var(--cubic-gray);
-    --marquee-color: var(--cubic-cyan);
+    --marquee-color: var(--cubic-lightblue);
     --marquee-bg-color: var(--cubic-black);
     --slider-small-color: var(--cubic-black);
     --slider-small-bg-color: var(--cubic-gray);
@@ -93,4 +93,5 @@
     --link-color: #6060fc;
     --link-color-visited: #8f6fad;
     --font-family: Consolas, 'Lucida Console', monospace;
+    --title-color: var(--cubic-gray);
 }

@@ -24,6 +24,7 @@
     --link-color: #0000ee;
     --link-color-visited: #551a8b;
     --font-family: Verdana, Arial, Helvetica, sans-serif;
+    --title-color: black;
 }
 
 html {
@@ -107,15 +108,23 @@ summary {
 }
 
 #title {
-    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
     /* font-family: Papyrus, Herculanum, Party LET, Curlz MT, Harrington, fantasy; */
     /* font-family: Verdana, Arial, Helvetica, sans-serif; */
     /* letter-spacing: -4px; */
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
     font-size: 2em;
     margin: .67em 0;
     font-weight: 100;
     padding-bottom: 10px;
     margin-left: 25px;
+}
+
+#title a {
+    text-decoration: none;
+}
+
+#title a:link, #title a:visited, #title a:hover {
+    color: var(--title-color);
 }
 
 #subtitle {
@@ -159,7 +168,7 @@ summary {
     margin: 10px;
     margin-left: 5px;
     margin-bottom: 20px;
-    width: 40%;
+    width: 50%;
 }
 
 #message_details,
@@ -175,6 +184,8 @@ summary {
 }
 
 #info,
+#vu,
+#visualizer,
 #pattern,
 #tracks,
 #comments,
@@ -216,9 +227,13 @@ summary {
 }
 
 #volume {
-    display: flex;
-    margin-bottom: 20px !important;
+    /* display: flex; */
+    margin-bottom: 10px;
     font-size: small;
+}
+
+#volume_percent {
+    margin-right: 5px;
 }
 
 #tempo,
@@ -241,26 +256,25 @@ summary {
 }
 
 #visualizer {
-    /* width:  1250px; */
-    width: 50%;
-    /* height: fit-content; */
-    height: 180px;
-    margin-left: 5%;
-    margin-bottom: 15px;
+    height: auto;
+    padding-top: 15px;
+    padding-bottom: 10px;
+    margin-left: 10px;
+    /* background-color: transparent; */
+}
+
+#visualizer_title h2 {
+    padding-top: 20px;
+    padding-bottom: 20px;
 }
 
 #visualizer #canvas {
-    width: 50%;
     height: 150px;
-    margin-left: 250px;
+    /* margin-left: 250px; */
+    width: 75%;
+    margin-left: 12%;
+    /* background-color: back; */
 }
-
-/*
-.visualizer canvas {
-    width:1 00%;
-    height: 100%
-}
-*/
 
 #channels {
     /* height: 13.75px; */
@@ -296,16 +310,13 @@ summary {
     color: var(--link-color) !important;
 }
 
-#pattern #show_channels {
+#pattern_viewer {
     font-size: small;
     white-space: pre;
     white-space-collapse: preserve-breaks;
     font-family: monospace;
     overflow: auto;
-}
-
-#show_channels {
-    padding-bottom: 2lh;
+    padding-bottom: 1lh;
 }
 
 #value {
@@ -426,12 +437,12 @@ body {
 }
 
 /*
-#plinks {
+#pl_links {
     display: none;
 }
 */
 
-#plinks a {
+#pl_links a {
     text-decoration: underline;
     font-weight: bold;
 }
@@ -474,7 +485,7 @@ body {
 
 #playlist article.song::after {
     /* color: var(--font-color); */
-    content: '\00A0 "' attr(data-modtitle, "N/A") '" ' attr(data-modtime, "00:00") '\00A0 \00A0 \00A0 [' attr(data-moddate, "0000-00-00") ' | ' attr(data-modsize, "0") '] \00A0';
+    content: '\00A0 "' attr(data-modtitle, "N/A") '" ' attr(data-modtime, "00:00") '\00A0 \00A0 \00A0 [' attr(data-moddate, "0000-00-00") ' | ' attr(data-modsize, "0") 'kb] \00A0';
 }
 
 #playlist article.song:hover {
@@ -505,18 +516,41 @@ body {
 
 #vu {
     /* width: 60%; */
-    width: fit-content;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    background-color: var(--bg-inner-color);
-    border-color: var(--border-color);
+    /* width: fit-content; */
+    /* padding-left: 10px; */
+    /* margin-left: 25%; */
+    height: auto;
     margin-left: 10px;
-    padding-left: 5px;
-    padding-bottom: 20px;
+    padding-bottom: 15px;
+    background-color: transparent;
+}
+
+.VU {
     margin-left: 25%;
 }
+
+#visual_setting {
+    display: "block";
+    font-size: smaller;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    text-align: center;
+}
+
+.btn-txt {
+    background: none;
+    border: none;
+    padding: 0px;
+    margin: 0px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+/*
+#sort {
+    font-size: small;
+}
+*/
 
 @media (max-width: 1200px) {
     body {
@@ -567,12 +601,13 @@ body {
         font-size: x-small;
     }
 
-    #pattern #show_channels {
+    #pattern_viewer {
         font-size: xx-small;
     }
     
     #pattern_row_channel {
-        display: inline-block;
+        /* display: inline-block; */
+        width: fit-content !important;
     }
     
     /*
@@ -599,5 +634,20 @@ body {
     #playlist .date,
     #playlist .size {
         font-size: x-small;
+    }
+
+    #volume {
+        display: block;
+        margin-bottom: 15px;
+    }
+
+    #vu,
+    #visualizer {
+        margin-left: 10px;
+        width: 95%;
+    }
+
+    .VU {
+        margin-left: 10px;
     }
 }

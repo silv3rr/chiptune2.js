@@ -1,69 +1,3 @@
-/*
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-*/
-
-svg.defs-only {
-    display:none;
-}
-
-/*
-html {
-  position: relative;
-  min-height: 100;
-  font-size: 10px;
-  color: #400080;
-  background-image: linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0), linear-gradient(45deg, #e0e0e0 25%, transparent 25%, transparent 75%, #e0e0e0 75%, #e0e0e0);
-  background-size: 20px 20px;
-  background-position: 0px 0px, 10px 10px;
-  background: transparent;
-}
-*/
-
-/*
-body {
-  font-family: 'Comfortaa', sans-serif;
-  font-size: 1.6em;
-  line-height: 1.5;
-  font-weight: lighter;
-  font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  color: #fff;
-  background-color: #2d2343;
-}
-*/
-
-/*
-.pace {
-  pointer-events: none;
-  user-select: none;
-}
-
-.pace-inactive {
-  display: none;
-}
-
-.pace .pace-progress {
-    background: #e3cc3c;
-    position: fixed;
-    top: 0rem;
-    z-index: 2000;
-    right: 100%;
-    width: 100%;
-    height: .5rem;
-}
-*/
-
-/*
-#jb-profil {
-    fill: #FFF;
-}
-*/
-
-
 /**
   http://dabblet.com/gist/e324a92d31b7f67da5c0
   * Static interpolation via paused animations
@@ -71,28 +5,23 @@ body {
   * Currently works in every modern browser except Safari
   */
 
-
-/*
-@keyframes VU {
+@keyframes __default__VU {
     0% { background: green }
     50% { background: yellowgreen }
     67% { background: yellow }
     83% { background: orange }
     100% { background: red }
 }
-*/
 
-/* blue-ish colors */
-/*
-@keyframes VU {
-   0% { background: #0077b6ff }
-   40% { background: #0096c7ff }
-   50% { background: #00b4d8ff }
-   60% { background: #48cae4ff }
-   70% { background: #90e0efff }
-   80%  { background: #ade8f4ff }
-   100% { background: #caf0f8ff }
-}*/
+@keyframes __bluegradient__VU {
+  0% { background: #0077b6ff }
+  40% { background: #0096c7ff }
+  50% { background: #00b4d8ff }
+  60% { background: #48cae4ff }
+  70% { background: #90e0efff }
+  80%  { background: #ade8f4ff }
+  100% { background: #caf0f8ff }
+}
 
 @keyframes VU {
   0% { background: #78c750 }
@@ -104,13 +33,8 @@ body {
   80% { background: #cf0e0e }
 }
 
-/*
-body
-    background: black;
-}
-*/
+/* default small leds: 20 x 15 */
 
-.POT div,
 .VU div {
     display: flex;
     /* display: block; */
@@ -121,6 +45,33 @@ body
     margin-right: 10px;
     width: 200px;
 }
+
+/* medium led squares: 25 x 25 */
+/*
+.VU div {
+    min-height: 25px; 
+    margin-right: 15px;
+    width: 350px;
+}
+*/
+
+/* big led squares: 35 x 35 */
+/*
+.VU div {
+    min-height: 35px;
+    margin-right: 30px;
+    width: 500px;
+}
+*/
+
+/* rectangle leds */
+
+.VU div {
+    min-height: 15px;
+    margin-right: 10px;
+    width: 550px;
+}
+
 .vu-left {
     padding: 1px 0 0 0;
 }
@@ -161,20 +112,6 @@ body
 .led10 div:nth-of-type(n+11) {
     opacity: 0;
 }
-/*
-input[type='range'] {
-}
-*/
-.POT div div {
-    display: block;
-    width: calc(10% - 4px);
-    margin: 0px;
-    height: calc(10vw - 4px);
-    border-radius: 50%;
-    border: 0px solid #333;
-    color: transparent;
-    text-align: center;
-}
 
 #wrap {
   /* Margin top by Header height */
@@ -187,11 +124,12 @@ input[type='range'] {
     margin-top: 0px;
 }
 
-/* #figure-1 { } */
-/* .wrap { } */
+/*@media only screen and (orientation: landscape) { } */
 
-@media only screen and (orientation: landscape) { }
-
-#vu_meter_js {
-  margin-left: 10px;
+@media (max-width: 1200px) {
+    .VU div {
+        min-height: 15px; 
+        margin-right: 10px;
+        width: 350px;
+   }
 }

@@ -246,9 +246,9 @@ libopenmpt.onRuntimeInitialized = function () {
     })
   }
 
-  function setDefaults() {
-    if (old_lib_version && show_notifications) {
-      document.getElementById('notification').innerHTML = "⚠ NOTE: does not play 100% correctly, IT resonance filters are missing"
+  function setElements() {
+    if (use_old_lib && show_notifications) {
+      document.getElementById('notification').innerHTML = notifications['old_lib']
     }
     document.getElementById('current_order').innerHTML = "order: 00"
     document.getElementById('current_pattern').innerHTML = "pattern: 00"
@@ -274,28 +274,31 @@ libopenmpt.onRuntimeInitialized = function () {
     document.getElementById('channels').innerHTML = ""
     document.getElementById('pattern_row_channel').innerHTML = ""
     document.getElementById('pattern_row_channel').style.width = "100%"
-    /* Example:
-    default_channels = "<span id='channels'>&nbsp;&nbsp;&nbsp; channel 01: &nbsp;  |  channel 02: &nbsp;  |  channel 03: &nbsp;  |  channel 04: &nbsp; </span>"
-    default_pattern_row_channel = `
-      <span id="pattern_row_channel">
-        01: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-        02: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-        03: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-        04: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-        05: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-        06: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-        07: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-        08: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-        09: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-        10: ... .. .. ... | ... .. .. ... | ... .. .. ... | ... .. .. ...
-      </span>`
-    */
     document.getElementById('next').disabled = false
     document.getElementById('prev').disabled = false
     document.getElementById('open').style.display = "none"
     document.querySelectorAll('#pitch,#tempo').forEach(e => e.value = 1);
+    document.getElementById('vu-right').style.display = 'none';
+    document.getElementById('vu-left').innerHTML = `${'<div></div>'.repeat(10)}`
+    document.getElementById('vu-right').style.display = 
     document.getElementById('change_visual').innerHTML = '(<button class="btn-txt" id="visualizer_next">change</button>)'
     document.querySelector('#change_visual').addEventListener('click', function (e) { visualize(getVisualSetting()); });
+    //document.querySelector(".visualizer").style.backgroundColor = 'lightgray';
+    //document.getElementById('visualizer').style.width = '55%';
+    //document.getElementById('canvas').style.backgroundColor = 'black';
+    //document.getElementById('visualizer').style.backgroundColor = 'var(--bg-inner-color)';
+    if (debug > 1) {
+      console.log('DEBUG: show_vu =', show_vu, ', show_visualizer =', show_visualizer)
+    }
+    document.getElementById('vu').style.display = show_vu  ? 'block' : 'none';
+    document.getElementById('visualizer').style.display = show_visualizer ? 'block' : 'none';
+    if (show_libopenmpt === 'marquee') {
+      let scroller = document.getElementById("scroller").innerHTML
+      document.getElementById("scroller").innerHTML = scroller.replace('</marquee>', ` (${ChiptuneJsPlayer.prototype.get_string("core_version")}) </marquee>`)
+    }
+    if (show_libopenmpt === 'bottom') {
+      document.getElementById("bottom").innerHTML = ChiptuneJsPlayer.prototype.get_string("core_version")
+    }    
     if (debug > 3) {
       document.getElementById('debug').innerHTML = `
         <div id="debug_volume">${volMeterData.volume}</div>

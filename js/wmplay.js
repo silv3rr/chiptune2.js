@@ -106,46 +106,45 @@ libopenmpt.onRuntimeInitialized = function () {
       format_pattern_row_all_channels = []
 
       //TODO:
-      //intervalID = setTimeout(() => {
-      //intervalID = setInterval(() => {
+      // timeoutID = setTimeout(() => { }, delay)  // end setTimeout
+      // intervalID = setInterval(() => { }, delay)  // end setInterval
 
       // check if song is actually playing
-      if (player.currentPlayingNode && (player.currentPlayingNode.modulePtr && player.currentPlayingNode.modulePtr > 0)) {
+      // if (player.currentPlayingNode && (player.currentPlayingNode.modulePtr && player.currentPlayingNode.modulePtr > 0)) { }
 
 
       setInterval(() => {
-        currentSongInfo();
-        patternViewer();
+        if (player.currentPlayingNode && (player.currentPlayingNode.modulePtr && player.currentPlayingNode.modulePtr > 0)) {
+          currentSongInfo();
+          patternViewer();
+        }
       }, delay)
 
 
-        //songInfo()
-        // TODO:
-        //console.log('DEBUG: getVolume', player.getVolume());
-        // test meter vol peaks (>10,20,30,40)
-        if (debug > 4) {
-          roundvol = roundNumDec(volMeterData.volume * 100, 0);
-          [10, 20, 30, 40].forEach(pct =>(roundvol > pct) && console.log(`DEBUG: round volume >${pct}`, volMeterData.volume, roundvol))
-        }
-        if (debug > 3) {
-          console.log('DEBUG: volumeMeterNode =', volumeMeterNode, ' volMeterData.volume =', volMeterData.volume)
-        }
-        // TODO: use vol from libopenmpt (sum all channels)
-        if (use_libopenmpt_volume) {
-          let sum_vol = 0;
-          for (let chan_vol of all_channels_vu_mono) {
-            sum_vol += chan_vol;
-          }
-          document.getElementById('debug').innerHTML = sum_vol
-        }
-        // TODO: use getGain
-        // requires changing chiptuneJsPlayer.prototype.play
-        if (use_gain_node) {
-          getGain()
-        }
+      //songInfo()
+      // TODO:
+      //console.log('DEBUG: getVolume', player.getVolume());
+      // test meter vol peaks (>10,20,30,40)
+      if (debug > 4) {
+        roundvol = roundNumDec(volMeterData.volume * 100, 0);
+        [10, 20, 30, 40].forEach(pct =>(roundvol > pct) && console.log(`DEBUG: round volume >${pct}`, volMeterData.volume, roundvol))
       }
-
-      //}, delay)  // end setInterval
+      if (debug > 3) {
+        console.log('DEBUG: volumeMeterNode =', volumeMeterNode, ' volMeterData.volume =', volMeterData.volume)
+      }
+      // TODO: use vol from libopenmpt (sum all channels)
+      if (use_libopenmpt_volume) {
+        let sum_vol = 0;
+        for (let chan_vol of all_channels_vu_mono) {
+          sum_vol += chan_vol;
+        }
+        document.getElementById('debug').innerHTML = sum_vol
+      }
+      // TODO: use getGain
+      // requires changing chiptuneJsPlayer.prototype.play
+      if (use_gain_node) {
+        getGain()
+      }
 
 
     } else {
@@ -310,7 +309,7 @@ libopenmpt.onRuntimeInitialized = function () {
     //
     // Get data
     //
-    let format_pattern_result = ''    
+    let format_pattern_result = ''
     let format_pattern_row_channel = []
     let format_get_current_channel_vu_mono = []
     let format_last_row = format_row
@@ -349,7 +348,9 @@ libopenmpt.onRuntimeInitialized = function () {
       document.getElementById('pattern_row_channel').style.width = "100%"
     }
     all_channels_vu_mono = format_get_current_channel_vu_mono
-    //console.log('DEBUG: all_channels_vu_mono =', all_channels_vu_mono)
+    if (debug > 3) {
+      console.log('DEBUG: all_channels_vu_mono =', all_channels_vu_mono)
+    }
     //
     // Show data
     //

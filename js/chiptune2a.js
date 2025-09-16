@@ -29,6 +29,9 @@ ChiptuneJsPlayer.prototype.load = function(input, callback) {
     if (input.endsWith('.zip')) {
       //console.log('DEBUG: input is .zip')
       let re = new RegExp(`\.(${valid_extentions})$`, 'i')
+      //
+      // Use jszip-utils to get data, instead of ArrayBuffer
+      //
       // JSZipUtils.getBinaryContent(input, function(err, data) {
       //   if (err) {
       //     throw err; // or handle err
@@ -44,7 +47,6 @@ ChiptuneJsPlayer.prototype.load = function(input, callback) {
             for (file in zip.files) {
               if (file.match(re)) {
                 zip.file(file).async("ArrayBuffer").then(function(data) {
-                  console.log(data)
                   return callback(data);
                 });
               }

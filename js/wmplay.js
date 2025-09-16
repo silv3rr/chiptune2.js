@@ -616,6 +616,36 @@ libopenmpt.onRuntimeInitialized = function () {
     }
   }
 
+
+  function afterLoad(path, buffer) {
+    player.play(buffer)
+    player.module_ctl_set_text('play.at_end', play_at_end)
+    duration_seconds = numOrZero(player.duration())
+    metaData(path);
+    setPlayButtonId();
+    //TODO: use init instead of startAudio
+    // enable meter for vu and visualizer, they use volMeterData.volume and volMeterData.buffer
+    if (enable_volume_meter) {
+      initVolMeter(player).then(() => {
+        startAudio(player.context, player);
+        isPlaying = true;
+        // vu.js (new)
+        if (show_vu) {
+          initVU();
+        }
+        // visualizer.js
+        if (show_visualizer) {
+          function waitBuffer() {
+            if (!volMeterData.buffer) {
+              setTimeout(() => { waitBuffer() }, 100)
+              return
+            }
+            visualize(getVisualSetting())
+          }
+          waitBuffer()
+        }
+      });
+    }
     //console.log('DEBUG: getGlobalVolume', player.getGlobalVolume());
     //console.log('DEBUG: setGlobalVolume', player.setGlobalVolume(0.1));
     //console.log('DEBUG: getGlobalVolume', player.getGlobalVolume());

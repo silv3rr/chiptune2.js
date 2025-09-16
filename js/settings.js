@@ -58,46 +58,46 @@ function setOptions() {
 }
 
 function switchOptions(e) {
-    // optgroup = document.querySelector('#settings option:checked').parentElement.label
-    // value = e.target[e.target.options.selectedIndex].value;
-    //if (Object.values(Object.values(select_options['theme'])).includes(value)) {
-    selected = e.target[e.target.options.selectedIndex];
-    //console.log('DEBUG: label =', selected.label, ', selected.value =', selected.value, ' parent label = ', selected.parentElement.label)
-    if (selected.parentElement.label == 'THEME') {
-      document.documentElement.setAttribute('data-theme', selected.value);
-      localStorage.setItem('theme', selected.value);
-    }
+  // optgroup = document.querySelector('#settings option:checked').parentElement.label
+  // value = e.target[e.target.options.selectedIndex].value;
+  //if (Object.values(Object.values(select_options['theme'])).includes(value)) {
+  selected = e.target[e.target.options.selectedIndex];
+  //console.log('DEBUG: label =', selected.label, ', selected.value =', selected.value, ' parent label = ', selected.parentElement.label)
+  if (selected.parentElement.label == 'THEME') {
+    document.documentElement.setAttribute('data-theme', selected.value);
+    localStorage.setItem('theme', selected.value);
+  }
+  if (selected.parentElement.label == 'OPTIONS') {
     for (const [k, v] of Object.entries(select_options.OPTIONS)) {
       if (selected.label.includes(`${k}:`)) {
         //console.log('DEBUG before key, value = ', k, typeof(k),  v)
         toggle = !v
         localStorage.setItem(k, toggle);
         select_options.OPTIONS[k] = toggle
-        //console.log('DEBUG: change key, value =', k, toggle)
         selected.value = toggle
-        //console.log('DEBUG: bool k !k', Boolean(k),!Boolean(k))
-        if (show_notifications) {
-          document.getElementById('notification').innerHTML = `<a href="?" onclick="location.reload();"> 🔄 Reload</a> to apply setting(s)`
-        }
+        //console.log('DEBUG: change key, value =', k, toggle, ' bool k !k', Boolean(k),!Boolean(k))
       }
     }
+    let get_local = {};
+    ["shuffle", "play_next", "show_vu", "show_visualizer"].forEach(option => {
+      get_local[option] = localStorage.getItem(option) ? localStorage.getItem(option) : null;
+    });
+    //console.log('DEBUG: get_local =', get_local)
+    shuffle = (get_local['shuffle'] === 'true') ? true : false;
+    play_next = (get_local['play_next'] === 'true') ? true : false;
+    show_vu = (get_local['show_vu'] === 'true') ? true : false;
+    show_visualizer = (get_local['show_visualizer'] === 'true') ? true : false;
+    enable_volume_meter = (show_vu || show_visualizer) ? true : false;
+    document.getElementById('vu').style.display =  show_vu ? 'block' : 'none';
+    document.getElementById('visualizer').style.display =  show_visualizer ? 'block' : 'none';
     setOptions()
-}
-
-const current_theme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
-if (current_theme) {
-    document.documentElement.setAttribute('data-theme', current_theme);
+  }
 }
 
 setOptions()
 
-let get_local = {};
+const current_theme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
 
-["shuffle", "play_next", "show_vu"].forEach(option => {
-  get_local[option] = localStorage.getItem(option) ? localStorage.getItem(option) : null;
-});
-
-shuffle = (get_local['shuffle'] === 'true') ? true : false;
-play_next = (get_local['play_next'] === 'true') ? true : false;
-show_vu = (get_local['show_vu'] === 'true') ? true : false;
-enable_volume_meter = (show_vu || visualSetting !== 'off') ? true : false;  
+if (current_theme) {
+    document.documentElement.setAttribute('data-theme', current_theme);
+}

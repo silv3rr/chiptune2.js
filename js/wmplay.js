@@ -25,7 +25,6 @@ const use_drop_files = false
 const use_gain_node = false
 const use_libopenmpt_volume = false
 const use_old_lib = false
-const use_old_meter_vu = false
 
 var debug = 2
 var mute = false
@@ -315,21 +314,6 @@ libopenmpt.onRuntimeInitialized = function () {
     let format_last_row = format_row
     format_row = leftPadNum(numOrZero(player.getCurrentRow() + 1), 2)
     format_channels = ''
-    /*
-      //let left = ''
-      //let right = ''
-      //let mono = ''
-      // stereo vu
-      left += `<strong>${i}:</strong> ${player.module_get_current_channel_vu_left(i)} `
-      right += `<strong>${i}:</strong> ${player.module_get_current_channel_vu_right(i)} `
-      document.getElementById('current_channel_vu_left').innerHTML = left
-      document.getElementById('current_channel_vu_right').innerHTML = right   
-      console.log(`DEBUG: player.module_get_current_channel_vu_left ${i} = ${player.module_get_current_channel_vu_left(i)}`)
-      // mono vu
-      mono += `<strong>${i}:</strong> ${player.module_get_current_channel_vu_mono(i)} `
-      document.getElementById('current_channel_vu_mono').innerHTML = mono
-    */
-    //format_pattern_row_all_channels.forEach(row => { ... })
     for (let i = 0; i < player.getChannels(); i++) {
       format_channels += `${(i === 0 ? '\u00A0'.repeat(6) : '\u00A0')} <span id="channel">channel ${leftPadNum(i + 1, 2)}: ${(i < player.getChannels() - 1 ? ' | ' : '')}</span>`
       format_pattern_row_channel[i] = player.formatPatternRowChannel(player.currentPlayingNode.modulePtr, player.getCurrentPattern(), player.getCurrentRow(), i)
@@ -380,15 +364,6 @@ libopenmpt.onRuntimeInitialized = function () {
     //format_all_channels_vu_mono = []
   }
 
-  // unused
-  function songPos() {
-    if (position_seconds > duration_seconds || format_remaining_sec <= 0 || position_percent >= 100) {
-      duration_seconds = player.duration()
-      position_seconds = player.getCurrentTime()  
-      position_percent = 100
-    }
-  }
-
   function endSong() {
     let set_position = true
     stopSong(set_position)
@@ -429,6 +404,8 @@ libopenmpt.onRuntimeInitialized = function () {
 
   function metaData(filename) {
     let format_song_id = ''
+    let format_filename = ''
+    let format_location = ''
     let format_message = ''
     let format_instruments = ''
     let format_samples = ''
@@ -449,8 +426,6 @@ libopenmpt.onRuntimeInitialized = function () {
     let format_duration_time = format_duration_mm_ss ? format_duration_mm_ss : '00:00'
     let format_position_max = roundNumDec(duration_seconds, 0)
     let format_bg_style_height = (num_message + num_samples + num_instruments > 0) ? `calc(3 * ${num_message + num_samples + num_instruments}em)` : "1500px"
-    let format_filename = ''
-    let format_location = ''
     let size = 0
     let date = ''
 
@@ -545,40 +520,6 @@ libopenmpt.onRuntimeInitialized = function () {
     document.getElementById('samples_details').innerHTML = format_samples
     document.getElementById('instruments_details').innerHTML = format_instruments
     document.getElementById('song_info').innerHTML = format_current_song_info
-  }
-
-  // use original meter (createScriptProcessor)
-  function oldMeterVU(){
-    //use_old_meter_vu
-    if (!meter) {
-      meter = createAudioMeter(player.context);
-      initVU(player);
-    }
-    if (meter.numberOfInputs != 1 || meter.numberOfOutput != 1) {
-      player.currentPlayingNode.connect(meter)
-    };
-    function lateInit() {
-      if (player) {
-        if (!player.processNode) {
-          setTimeout(() => { lateInit() }, 100)
-          return
-        }
-        // attempt to reconnect meter and analyser after 100ms 
-        player.currentPlayingNode.connect(meter)  
-        //analyser.connect(player.currentPlayingNode.context.destination)
-        //player.currentPlayingNode.connect(analyser)
-      }
-    }
-    lateInit();
-    if (debug > 2) {
-      if (meter.buf) {
-        for (var i=0; i<meter.buf.length; i++) {
-          document.getElementById('debug').innerHTML = meter.buf[i]
-        }
-      }
-      //console.log('DEBUG: meter.volume',  meter.volume)
-      //let sum_vol = roundNumDec((meter.volume * 100)*2*2, 0);
-    }
   }
 
   function getGain() {
@@ -731,21 +672,10 @@ libopenmpt.onRuntimeInitialized = function () {
       switchButtons();
       property_value = true
       disableStopButton(property_value);
+      //document.getElementById('scroller').innerHTML = '<marquee style="color:var(--marquee-color);background-color:var(--marquee-bg-color);">Song stopped, press Play</marquee>'
     }
   }
 
-  function nodelist() {
-    //console.log('DEBUG: next', document.querySelectorAll(`.song[data-modurl='${modurl}']`))
-    //nodelist ? nodelist[0].getAttribute("data-modurl") : null
-    i = 0
-    nodelist.forEach(e => {
-      if (e.getAttribute("data-modurl") === modurl) {
-        return e
-      };
-      i++
-    });
-  }
-  
   function nextSong() {
     const songlist = document.querySelectorAll(".song");
     for (let i = 0; i + 1 < songlist.length; i++) {
@@ -959,7 +889,8 @@ libopenmpt.onRuntimeInitialized = function () {
       case "KeyP":
         prevButton()
         break;
-      // TODO: dont reuse buttons already used by browser, disabled
+      // TODO: dont reuse buttons already used by browser
+      //disabled
       case "__disabled__Escape":
         menuButton();
         alert('Esc: menuButton')

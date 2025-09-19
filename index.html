@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html class="no-js">
-
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -24,7 +23,6 @@
   <script type="text/javascript" src="js/wmplay.js"></script>
   <script type="text/javascript" src="js/libopenmpt.js"></script>
 </head>
-
 <body>
   <div id="settings" class="top"></div>
   <div class="bg"></div>
@@ -44,9 +42,9 @@
       <marquee style="color:var(--marquee-color);background-color:var(--marquee-bg-color);">
         Hi! No module loaded ::
         Press <strong>Play</strong> or click on a song below ::
-        To load a local file or url press Open ::
+        To load a local file or url press <strong>Open</strong> ::
         To select a theme or change <strong>Settings</strong>, use the dropdown menu on the top left ::
-        Press 'h'for keyboard shortcuts
+        Press '<strong>h</strong>' for keyboard shortcuts
       </marquee>
     </span>
     <div id="controls">
@@ -87,11 +85,6 @@
     </div>
   </div>
   <div id="vu" style="display:none">
-    <!--
-      <p><span id="current_channel_vu_left"></span></p>
-      <p><span id="current_channel_vu_right"></span></p>
-      <p><span id="current_channel_vu_mono"></span></p
-    -->
     <div id="wrap" self="center" class="smoke">
       <header id="header" self="top">
         <div class="VU" style="float:left">
@@ -182,10 +175,11 @@
       <!-- Module Data. Add modules to playlist and set default song (or omit to play the first), modsize is in kilobytes. A few examples: -->
       <div class="collection" data-modplist="">
         <!-- article class="song" data-modurl="url/or/path/to/mymodule.it" data-modtitle="My Mod Example" data-modfile="mymodule.it" data-moddate="1999-12-31" data-modsize="100" href="#"></a></article -->
-        <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=57925#space_debris.mod" data-modtitle="Markus 'Captain' Kaarlonen - Space Debris" data-modtime="05:05" data-moddate="1991-03-29" data-modsize="39"></article>
-        <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=48407#MR_STRID.XM"      data-modtitle="MickRip - Astrid" data-modtime="04:32" data-moddate="1996-03-31" data-modsize="812"></article>
-        <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=60395#2ND_PM.S3M"      data-modtitle="Purple Motion/FC - Unreal 2" data-modtime="06:44" data-moddate="1993-10-09" data-modsize="587"></article>
-        <script type="text/javascript">default_modurl = "https://api.modarchive.org/downloads.php?moduleid=57925#space_debris.mod";</script>
+        <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=34654#CTGOBLIN.S3M" data-modtitle="Skaven/FC Catch that goblin!!" data-modtime="02:40" data-moddate="1995-08-13" data-modsize="471"></article>
+        <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=77339#edelweiss.mod" data-modtitle="Edelweiss" data-modtime="06:46" data-moddate="1994-08-07" data-modsize="192"></article>
+        <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=191789#aryx.s3m" data-modtitle="k.kock - aryx" data-modtime="02:21" data-moddate="1995-03-29" data-modsize="20"></article>
+        <article class="song" data-modurl="https://api.modarchive.org/downloads.php?moduleid=82567#pinball_fantasies_party_land.mod" data-modtitle="Olof Gustafsson - Party Land (Pinball Fantasies)" data-modtime="04:29" data-moddate="1992-00-00" data-modsize="206"></article>
+        <script type="text/javascript">default_modurl = "https://api.modarchive.org/downloads.php?moduleid=34654#CTGOBLIN.S3M";</script>
       </div>
       <!-- -->
 
@@ -202,5 +196,4 @@
   <div id="bottom"></div>
   <script type="text/javascript" src="js/settings.js"></script>
 </body>
-
 </html>

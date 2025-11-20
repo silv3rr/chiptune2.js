@@ -9,14 +9,12 @@
     --color-meter-optimum-value: #023E8A;
     --color-meter-suboptimum-value: #0077B6;
     --color-meter-even-less-good-value: #48CAE4;
-    --font-bg-color:  whitesmoke;
+    --font-bg-color: whitesmoke;
     --slider-color: #1d559e;
     --slider-small-color: black;
     --slider-small-bg-color: transparent;
-    /* --marquee-color: lightgreen; */
-    /* --marquee-bg-color: #888; */
     --marquee-color: black;
-    --marquee-bg-color: #eeee;
+    --marquee-bg-color: #eee;
     --border-color: gray;
     --font-color: black;
     --button-color: #e9e9ed;
@@ -28,7 +26,7 @@
 }
 
 html {
-    /* font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; */ 
+    /* font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; */
     font-family: var(--font-family) !important;
 }
 
@@ -123,7 +121,9 @@ summary {
     text-decoration: none;
 }
 
-#title a:link, #title a:visited, #title a:hover {
+#title a:link,
+#title a:visited,
+#title a:hover {
     color: var(--title-color);
 }
 
@@ -186,9 +186,9 @@ summary {
 #info,
 #vu,
 #visualizer,
-#pattern,
+#patterns,
 #tracks,
-#comments,
+#text,
 #open {
     width: 60%;
     border-style: solid;
@@ -223,7 +223,7 @@ summary {
 }
 
 #eject {
-    margin-left: 10px !important;
+    margin-left: 20px !important;
 }
 
 #volume {
@@ -263,6 +263,15 @@ summary {
     /* background-color: transparent; */
 }
 
+#visualizer_title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+    /* font-style: italic; */
+    color: gray;
+    padding-top: 10px;
+}
+
 #visualizer_title h2 {
     padding-top: 20px;
     padding-bottom: 20px;
@@ -281,7 +290,7 @@ summary {
     height: 10lh;
 }
 
-#pattern {
+#patterns {
     height: fit-content;
 }
 
@@ -394,6 +403,11 @@ summary {
     font-size: small;
 }
 
+#tempo,
+#pitch {
+    font-family: Consolas, 'Lucida Console', monospace;
+}
+
 #playlist p {
     /* clear: both; */
     /* padding: 0; */
@@ -429,20 +443,20 @@ body {
 #theme-selector,
 #player,
 #info,
-#pattern,
-#comments,
+#patterns,
+#text,
 #tracks,
 #open {
     margin-left: 10px;
 }
 
 /*
-#pl_links {
+#nav {
     display: none;
 }
 */
 
-#pl_links a {
+#nav     a {
     text-decoration: underline;
     font-weight: bold;
 }
@@ -452,7 +466,8 @@ body {
     text-decoration: none;
 }
 
-#info, #comments {
+#info,
+#text {
     padding-bottom: 15px;
 }
 
@@ -490,7 +505,7 @@ body {
 
 #playlist article.song:hover {
     background: var(--font-bg-color);
-    color: var(--value-highlight-color);    
+    color: var(--value-highlight-color);
     text-decoration: underline;
     cursor: pointer;
 }
@@ -499,6 +514,7 @@ body {
     from {
         background-color: var(--value-playing-color);
     }
+
     to {
         background-color: var(--bg-inner-color);
     }
@@ -530,7 +546,7 @@ body {
 }
 
 #visual_setting {
-    display: "block";
+    display: block;
     font-size: smaller;
     margin-top: 15px;
     margin-bottom: 5px;
@@ -538,7 +554,8 @@ body {
 }
 
 .btn-txt {
-    background: none;
+    /* background-color: transparent; */
+    background-color: var(--button-color);
     border: none;
     padding: 0px;
     margin: 0px;
@@ -546,11 +563,29 @@ body {
     text-decoration: underline;
 }
 
+.btn-txt:hover {
+    color: var(--link-color);
+}
+
+.btn-txt:focus {
+    color: var(--value-highlight-color);
+    text-decoration: bolder underline !important;
+}
+
+
 /*
 #sort {
     font-size: small;
 }
 */
+
+#wmp {
+    display: flex;
+    float: right;
+    color:#f5f5f5;
+    padding-left:25%;
+    position: absolute;
+}
 
 @media (max-width: 1200px) {
     body {
@@ -571,8 +606,8 @@ body {
 
     #player,
     #info,
-    #pattern,
-    #comments,
+    #patterns,
+    #text,
     #tracks {
         width: 95%;
     }
@@ -598,18 +633,18 @@ body {
 
     #controls input[type=button] {
         color: black;
-        font-size: x-small;
+        font-size: x-smal;
     }
 
     #pattern_viewer {
         font-size: xx-small;
     }
-    
+
     #pattern_row_channel {
         /* display: inline-block; */
         width: fit-content !important;
     }
-    
+
     /*
     meter,
     meter::-webkit-meter-bar {
@@ -649,5 +684,13 @@ body {
 
     .VU {
         margin-left: 10px;
+    }
+
+    #wmp {
+        display: none;
+    }
+    #eject {
+        display: block;
+        margin-left: 3px !important;
     }
 }

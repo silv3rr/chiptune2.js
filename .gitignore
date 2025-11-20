@@ -5,4 +5,4 @@ mirror/
 vendor/
 js/libopenmpt-*
 *.bak
-*_playlist.html
+playlist-*.html

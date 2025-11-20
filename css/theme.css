@@ -1,3 +1,29 @@
+[data-theme='wmplay-default'] {
+--song-playing-color: blue;
+    --song-color: black;
+    --bg-inner-color: white;
+    --value-color: black;
+    --value-highlight-color: black;
+    --pattern-color: lightgray;
+    --color-meter-optimum-value: #023E8A;
+    --color-meter-suboptimum-value: #0077B6;
+    --color-meter-even-less-good-value: #48CAE4;
+    --font-bg-color: whitesmoke;
+    --slider-color: #1d559e;
+    --slider-small-color: black;
+    --slider-small-bg-color: transparent;
+    --marquee-color: black;
+    --marquee-bg-color: #eee;
+    --border-color: gray;
+    --font-color: black;
+    --button-color: #e9e9ed;
+    --hr-color: black;
+    --link-color: #0000ee;
+    --link-color-visited: #551a8b;
+    --font-family: Verdana, Arial, Helvetica, sans-serif;
+    --title-color: black;
+}
+
 [data-theme='impulse-tracker'] {
     --it-yellow: #ffff55;
     --it-yellow2: #e6e65f;

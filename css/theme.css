@@ -92,7 +92,7 @@
     --slider-small-color: var(--ft-white);
     --link-color: #03039b;
     --link-color-visited: #3c0d68;
-    --font-family: Consolas, 'Lucida Console', monospace;
+    --font-family: Monaco, Consolas, 'Lucida Console', monospace;
 }
 
 [data-theme='cubic-player']  {

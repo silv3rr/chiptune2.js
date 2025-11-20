@@ -1,27 +1,17 @@
 // settings dropdown
 
-const select_options = {
-  THEME: {
-    "default": "default",
-    "impulse": "impulse-tracker",
-    "scream": "scream-tracker",
-    "fast": "fasttracker",
-    "cubic": "cubic-player"
-  },
-  OPTIONS: {
-    "shuffle": shuffle,
-    "play_next": play_next,
-    "show_vu": show_vu,
-    "show_visualizer": show_visualizer,
-  },  
-  CONFIG: {
-    "repeat": repeat,
-    "pattern_max_rows": pattern_max_rows,
-    "visualSetting": visualSetting,
-  }
-}
+// const selectOptions() = {
+//  LABEL: {
+//      "opt1": val1,
+//   }
+// }
 
 var optionSelector
+const currentTheme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
+
+if (currentTheme) {
+  document.documentElement.setAttribute('data-theme', currentTheme);
+}
 
 function setOptions() {
   let options = '<select name="settings" id="options-selector">'
@@ -29,17 +19,18 @@ function setOptions() {
   let checked = false
   let disabled = false
   options += '<option value="" selected>Settings..</option>'
-  for (const key of Object.keys(select_options)) {
+  for (const key of Object.keys(selectOptions())) {
     options += `<optgroup label="${key}">`
-    for (const [k, v] of Object.entries(select_options[key])) {
+    for (let [k, v] of Object.entries(selectOptions()[key])) {
       switch(key) {
         case "THEME":
           label = k;
-          checked = (v==document.documentElement.getAttribute('data-theme')) ? true : false;
+          checked = (v == document.documentElement.getAttribute('data-theme')) ? true : false;
           break;
         case "OPTIONS":
           label = `${k}: ${(v ? 'on' : 'off')}`;
           checked = v;
+          //console.log('DEBUG: k, v, checked = ', k, v, checked)
           break;
         case "CONFIG":
           disabled = true
@@ -58,9 +49,6 @@ function setOptions() {
 }
 
 function switchOptions(e) {
-  // optgroup = document.querySelector('#settings option:checked').parentElement.label
-  // value = e.target[e.target.options.selectedIndex].value;
-  //if (Object.values(Object.values(select_options['theme'])).includes(value)) {
   selected = e.target[e.target.options.selectedIndex];
   //console.log('DEBUG: label =', selected.label, ', selected.value =', selected.value, ' parent label = ', selected.parentElement.label)
   if (selected.parentElement.label == 'THEME') {
@@ -68,36 +56,19 @@ function switchOptions(e) {
     localStorage.setItem('theme', selected.value);
   }
   if (selected.parentElement.label == 'OPTIONS') {
-    for (const [k, v] of Object.entries(select_options.OPTIONS)) {
+    for (const [k, v] of Object.entries(selectOptions().OPTIONS)) {
       if (selected.label.includes(`${k}:`)) {
-        //console.log('DEBUG before key, value = ', k, typeof(k),  v)
         toggle = !v
         localStorage.setItem(k, toggle);
-        select_options.OPTIONS[k] = toggle
+        selectOptions().OPTIONS[k] = toggle
         selected.value = toggle
-        //console.log('DEBUG: change key, value =', k, toggle, ' bool k !k', Boolean(k),!Boolean(k))
       }
     }
-    let get_local = {};
-    ["shuffle", "play_next", "show_vu", "show_visualizer"].forEach(option => {
-      get_local[option] = localStorage.getItem(option) ? localStorage.getItem(option) : null;
-    });
-    //console.log('DEBUG: get_local =', get_local)
-    shuffle = (get_local['shuffle'] === 'true') ? true : false;
-    play_next = (get_local['play_next'] === 'true') ? true : false;
-    show_vu = (get_local['show_vu'] === 'true') ? true : false;
-    show_visualizer = (get_local['show_visualizer'] === 'true') ? true : false;
-    enable_volume_meter = (show_vu || show_visualizer) ? true : false;
-    document.getElementById('vu').style.display =  show_vu ? 'block' : 'none';
-    document.getElementById('visualizer').style.display =  show_visualizer ? 'block' : 'none';
+    enable_volume_meter = (selectOptions().OPTIONS.show_vu || selectOptions().OPTIONS.show_visualizer) ? true : false;
+    document.getElementById('vu').style.display =  selectOptions().OPTIONS.show_vu ? 'block' : 'none';
+    document.getElementById('visualizer').style.display =  selectOptions().OPTIONS.show_visualizer ? 'block' : 'none';
     setOptions()
   }
 }
 
 setOptions()
-
-const current_theme = localStorage.getItem('theme') ? localStorage.getItem('theme') : null;
-
-if (current_theme) {
-    document.documentElement.setAttribute('data-theme', current_theme);
-}

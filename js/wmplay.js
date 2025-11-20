@@ -3,6 +3,28 @@
  * Needs: libopenmpt.js chiptune2.js and chiptune2a.js
  */
 
+// TODO: 
+//  - change setinterval player loop
+//      remove loop?  (only needed for patterviewer?)
+//      or change to set timeout callback instead of interval:  setTimeout(() => { ... }, 1000);
+//  - convert ScriptProcessorNode in chiptune2 to AudioWorklet (..like chiptune3 :-)
+//      var processNode = this.context.createScriptProcessor(2048, 0, 2);
+//  - feat: oscilloscope (needs analyser)
+//  - feat: currently playing sample/instrument name in patternviewer
+//  - feat: make middle row current in patternviewer, instead of bottom row (and highlight)
+//  - feat: make rainbox a toggle
+//  - fix: getVolume 
+//  - fix: auto play next song (ios only?) --> fixed?
+//  - fix: if vu and visualizer was off before songs plays, enabling on the fly doesnt work (regression) 
+//          -- move check back to player loop?
+//  - resume/suspend audio context? https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/resume
+
+
+// MDN Web Audio API Examples
+//  https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API/visualizers_with_Web_Audio_API
+//  https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/createAnalyser
+
+
 /* Options */
 
 const delay = 50
@@ -19,25 +41,56 @@ const show_open_button = true
 const show_gain = false
 
 const visuals = ['sinewave', 'line', 'frequencybars', 'invertedbars']
-const visualSetting = "random"  // "off", "random", or visuals[i]
+var visualRainbow
+var visualSetting = "random"  // "off", "random", or visuals[i]
 
 const use_drop_files = false
 const use_gain_node = false
 const use_libopenmpt_volume = false
 const use_old_lib = false
+const default_example_modurl = "https://api.modarchive.org/downloads.php?moduleid=57925#space_debris.mod"
 
 var debug = 2
 var mute = false
 var enable_volume_meter = true
 
-var shuffle = true
-var play_next = true
-var show_vu = true
-var show_visualizer = true
-
 var toggle_sort = { file: true, title: true, date: true, time: true, size: true }
 var volMeterData = { volume: 0, buffer: 0, clipping: false }
 var drawVisual
+
+
+function selectOptions() {
+  const getLocal = {
+    shuffle: localStorage.getItem('shuffle') ? localStorage.getItem('shuffle') : null,
+    play_next: localStorage.getItem('play_next') ? localStorage.getItem('play_next') : null,
+    show_vu: localStorage.getItem('show_vu') ? localStorage.getItem('show_vu') : null,
+    show_mini_vu: localStorage.getItem('show_mini_vu') ? localStorage.getItem('show_mini_vu') : null,
+    show_visualizer: localStorage.getItem('show_visualizer') ? localStorage.getItem('show_visualizer') : null,
+  }
+  return {
+    THEME: {
+      "default": "wmplay-default",
+      "impulse": "impulse-tracker",
+      "scream": "scream-tracker",
+      "fast": "fasttracker",
+      "cubic": "cubic-player",
+      //TODO;
+      //"default": "ttbdmp",
+    },
+    OPTIONS: {
+      "shuffle": (getLocal['shuffle'] === 'true') ? true : false,
+      "play_next": (getLocal['play_next'] === 'true') ? true : false,
+      "show_vu": (getLocal['show_vu'] === 'true') ? true : false,
+      "show_mini_vu": (getLocal['show_mini_vu'] === 'true') ? true : false,
+      "show_visualizer": (getLocal['show_visualizer'] === 'true') ? true : false,
+    },  
+    CONFIG: {
+      "repeat": repeat,
+      "pattern_max_rows": pattern_max_rows,
+      "visualSetting": visualSetting,
+    }
+  }
+}
 
 const notifications = {
   reload: `<a href="?" onclick="location.reload();"> 🔄 Reload</a> to apply setting(s)`,
@@ -62,7 +115,7 @@ libopenmpt.onRuntimeInitialized = function () {
   var format_position_time
   var format_tempo_factor
   var format_pitch_factor
-  var format_row
+  var format_row_num
   var format_pattern
   var format_order
   var format_bpm
@@ -81,6 +134,8 @@ libopenmpt.onRuntimeInitialized = function () {
   var modsize
   var default_modurl
   var duration_seconds
+  var max_row_length = 180
+  var currentVisual
 
   console.log('libopenmpt.onRuntimeInitialized')
 
@@ -90,9 +145,9 @@ libopenmpt.onRuntimeInitialized = function () {
     if (button) {
       button.disabled = false
     }
-    //TODO: msg processor
-    // volumeMeterNode.port.postMessage("node test123");
-    // console.log('DEBUG: vu =', volumeMeterNode)
+    // TODO: msg processor
+    //   volumeMeterNode.port.postMessage("node test123");
+    //   console.log('DEBUG: vu =', volumeMeterNode)
     if (player == undefined) {
       console.log('player is undefined')
       player = new ChiptuneJsPlayer(new ChiptuneJsConfig(repeat));
@@ -104,9 +159,10 @@ libopenmpt.onRuntimeInitialized = function () {
       // make sure we clear patterns of prev song (array of rows)
       format_pattern_row_all_channels = []
 
-      //TODO:
-      // timeoutID = setTimeout(() => { }, delay)  // end setTimeout
-      // intervalID = setInterval(() => { }, delay)  // end setInterval
+      //  TODO:
+
+      // change   intervalID = setInterval(() => { }, delay)  // end setInterval
+      // to       timeoutID = setTimeout(() => { }, delay)  // end setTimeout
 
       // check if song is actually playing
       // if (player.currentPlayingNode && (player.currentPlayingNode.modulePtr && player.currentPlayingNode.modulePtr > 0)) { }
@@ -121,7 +177,7 @@ libopenmpt.onRuntimeInitialized = function () {
 
 
       //songInfo()
-      // TODO:
+
       //console.log('DEBUG: getVolume', player.getVolume());
       // test meter vol peaks (>10,20,30,40)
       if (debug > 4) {
@@ -131,6 +187,7 @@ libopenmpt.onRuntimeInitialized = function () {
       if (debug > 3) {
         console.log('DEBUG: volumeMeterNode =', volumeMeterNode, ' volMeterData.volume =', volMeterData.volume)
       }
+
       // TODO: use vol from libopenmpt (sum all channels)
       if (use_libopenmpt_volume) {
         let sum_vol = 0;
@@ -139,12 +196,12 @@ libopenmpt.onRuntimeInitialized = function () {
         }
         document.getElementById('debug').innerHTML = sum_vol
       }
+
       // TODO: use getGain
       // requires changing chiptuneJsPlayer.prototype.play
       if (use_gain_node) {
         getGain()
       }
-
 
     } else {
       //player.context.suspend()
@@ -174,15 +231,16 @@ libopenmpt.onRuntimeInitialized = function () {
 
 
   function getVisualSetting() {
-    let setting
     if (visualSetting === 'random') {
-      let idx = Math.floor(Math.random() * visuals.length)
-      setting = visuals[idx]
+      let idx = visuals.indexOf(currentVisual)
+      while (visuals[idx] == currentVisual) {
+        idx = Math.floor(Math.random() * visuals.length)
+      }
+      currentVisual = visuals[idx]
     } else {
-      setting = visualSetting
+      currentVisual = visualSetting
     }
-    document.getElementById("visual_name").innerHTML = `"${setting}"`
-    return setting
+    return currentVisual
   }
 
   function setModData() {
@@ -194,7 +252,7 @@ libopenmpt.onRuntimeInitialized = function () {
         moddate = e.getAttribute("data-moddate")
         modsize = e.getAttribute("data-modsize")
         if (debug > 1) {
-          console.log(`DEBUG: setModData modurl=${modurl} moddata modtitle=${modtitle} modtime=${modtime} modfile=${modfile} moddate=${moddate} modsize=${modsize}`)
+          console.log(`DEBUG: setModData modurl=${modurl} moddata modtitle="${modtitle}" modtime=${modtime} modfile=${modfile} moddate=${moddate} modsize=${modsize}`)
         }
         e.style.color = 'var(--song-playing-color)'
       } else {
@@ -216,14 +274,13 @@ libopenmpt.onRuntimeInitialized = function () {
     document.getElementById('pitch_range').disabled = false
     document.getElementById('volume_range').disabled = false
     document.getElementById('gain_range').disabled = false
-    //document.getElementById('tempo_factor').innerHTML = "1.00"
-    //document.getElementById('pitch_factor').innerHTML = "1.00"
-    //document.getElementById('volume_percent').innerHTML = "100%"
+    document.getElementById('tempo_range').value = "1.00"
+    document.getElementById('pitch_range').value = "1.00"
     document.getElementById('position_range').min = 0
     document.getElementById('position_range').max = 0
     document.getElementById('info').style.display = "block"
-    document.getElementById('pattern').style.display = "block"
-    document.getElementById('comments').style.display = "block"
+    document.getElementById('patterns').style.display = "block"
+    document.getElementById('text').style.display = "block"
     document.getElementById('message').style.display = "none"
     document.getElementById('samples').style.display = "none"
     document.getElementById('instruments').style.display = "none"
@@ -238,17 +295,42 @@ libopenmpt.onRuntimeInitialized = function () {
     document.getElementById('vu-right').style.display = 'none';
     document.getElementById('vu-left').innerHTML = `${'<div></div>'.repeat(10)}`
     document.getElementById('vu-right').style.display = 
-    document.getElementById('change_visual').innerHTML = '(<button class="btn-txt" id="visualizer_next">change</button>)'
-    document.querySelector('#change_visual').addEventListener('click', function (e) { visualize(getVisualSetting()); });
+    document.getElementById('visual_change').innerHTML = '<button class="btn-txt" id="visualizer_next">change</button>'
+    document.querySelector('#visual_change').addEventListener('click', function (e) {
+      let visual = getVisualSetting()
+      visualize(visual);
+      document.getElementById("visual_name").innerHTML = visual ? `"${visual}"` : `"..."`;
+    });
+    /*
+    document.getElementById('visual_rainbow').innerHTML = '<input type="checkbox" id="visualizer_rainbow"> rainbow</input>'
+    checkbox = document.querySelector("input[id=visualizer_rainbow]");
+    checkbox.addEventListener('change', function() {
+      visualRainbow = this.checked;
+    });
+    */
+
+    document.getElementById('visual_rainbow_on').innerHTML = '<button class="btn-txt" id="visualizer_rainbow">on</button>'
+    document.querySelector('#visualizer_rainbow').addEventListener('click', function (e) {
+      visualRainbow = true;
+      //this.innerHTML = '<button class="btn-txt" id="visualizer_rainbow">[x] on</button>'
+      //console.log('DEBUG: visualRainbow=', visualRainbow)
+      //document.getElementById("visual_name").innerHTML = visual ? `"${visual}"` : `"..."`;
+    });
+
+    document.getElementById('visual_rainbow_off').innerHTML = '<button class="btn-txt" id="visualizer_normal">off</button>'
+    document.querySelector('#visualizer_normal').addEventListener('click', function (e) {
+      visualRainbow = false;
+    });    
+
     //document.querySelector(".visualizer").style.backgroundColor = 'lightgray';
     //document.getElementById('visualizer').style.width = '55%';
     //document.getElementById('canvas').style.backgroundColor = 'black';
     //document.getElementById('visualizer').style.backgroundColor = 'var(--bg-inner-color)';
     if (debug > 1) {
-      console.log('DEBUG: show_vu =', show_vu, ', show_visualizer =', show_visualizer)
+      console.log('DEBUG: show_vu =', selectOptions().OPTIONS.show_vu, ', show_visualizer =', selectOptions().OPTIONS.show_visualizer)
     }
-    document.getElementById('vu').style.display = show_vu  ? 'block' : 'none';
-    document.getElementById('visualizer').style.display = show_visualizer ? 'block' : 'none';
+    document.getElementById('vu').style.display = selectOptions().OPTIONS.show_vu  ? 'block' : 'none';
+    document.getElementById('visualizer').style.display = selectOptions().OPTIONS.show_visualizer ? 'block' : 'none';
     if (show_libopenmpt === 'marquee') {
       let scroller = document.getElementById("scroller").innerHTML
       document.getElementById("scroller").innerHTML = scroller.replace('</marquee>', ` (${ChiptuneJsPlayer.prototype.get_string("core_version")}) </marquee>`)
@@ -277,8 +359,8 @@ libopenmpt.onRuntimeInitialized = function () {
     let format_remaining_sec = leftPadNum(Math.floor(remaining_seconds % 60), 2)
     let format_position_mm_ss = `${format_remaining_min}:${format_remaining_sec}`
     format_position_time = format_position_mm_ss ? format_position_mm_ss : '00:00'
-    format_tempo_factor = player.module_ctl_get_floatingpoint('play.tempo_factor').toFixed(2)
-    format_pitch_factor = player.module_ctl_get_floatingpoint('play.pitch_factor').toFixed(2)
+    format_tempo_factor = player.ctl_get_floatingpoint('play.tempo_factor').toFixed(2)
+    format_pitch_factor = player.ctl_get_floatingpoint('play.pitch_factor').toFixed(2)
     format_order = leftPadNum(numOrZero(player.getCurrentOrder()), 2)
     format_pattern = leftPadNum(numOrZero(player.getCurrentPattern()), 2)
     format_bpm = roundNumDec(numOrZero(player.getCurrentBPM()), 0)
@@ -289,12 +371,12 @@ libopenmpt.onRuntimeInitialized = function () {
     // Show data
     //
     //document.getElementById('time').innerHTML = `time: <strong>${format_position_mm_ss}</strong><br>`;
-    //document.getElementById('progress').innerHTML = `<p><progress value="${position_seconds}" max="${duration_seconds}"></progress> &nbsp; (${position_percent}&#37;)</p>`;
-    //document.getElementById('current_row').innerHTML = `row: ${format_row}`
+    //document.getElementById('progress').innerHTML = `<p><progress value="${position_seconds}" ma`x=`"${duration_seconds}"></progress> &nbsp; (${position_percent}&#37;)</p>`;
+    //document.getElementById('current_row').innerHTML = `row: ${format_row_num}`
     document.getElementById('current_channels').innerHTML = `channels: ${current_channels}`
     document.getElementById('current_bpm').innerHTML = `bpm: ${format_bpm}`
-    document.getElementById("position_range").value = roundNumDec(position_seconds, 0)
-    document.getElementById("position_time").innerHTML = `-${format_position_time}`
+    document.getElementById("position_range").value = roundNumDec(position_seconds, 0)  
+    document.getElementById("position_time").innerHTML = (remaining_seconds < 0) ? '--:--' : `-${format_position_time}`
     document.getElementById("position_percent").innerHTML = `(${position_percent}%)`
     document.getElementById('pitch_factor').innerHTML = format_pitch_factor
     document.getElementById('tempo_factor').innerHTML = format_tempo_factor
@@ -311,26 +393,29 @@ libopenmpt.onRuntimeInitialized = function () {
     let format_pattern_result = ''
     let format_pattern_row_channel = []
     let format_get_current_channel_vu_mono = []
-    let format_last_row = format_row
-    format_row = leftPadNum(numOrZero(player.getCurrentRow() + 1), 2)
+    let format_last_row_num = format_row_num
+    format_row_num = leftPadNum(numOrZero(player.getCurrentRow() + 1), 3)
     format_channels = ''
     for (let i = 0; i < player.getChannels(); i++) {
       format_channels += `${(i === 0 ? '\u00A0'.repeat(6) : '\u00A0')} <span id="channel">channel ${leftPadNum(i + 1, 2)}: ${(i < player.getChannels() - 1 ? ' | ' : '')}</span>`
-      format_pattern_row_channel[i] = player.formatPatternRowChannel(player.currentPlayingNode.modulePtr, player.getCurrentPattern(), player.getCurrentRow(), i)
-      format_get_current_channel_vu_mono[i] = roundNumDec(numOrZero(player.module_get_current_channel_vu_mono(i)), 2)
+      format_pattern_row_channel[i] = player.format_pattern_row_channel(player.getCurrentPattern(), player.getCurrentRow(), i)
+      //format_pattern_row_channel[i] = player.format_pattern_row_channel(i)
+      format_get_current_channel_vu_mono[i] = roundNumDec(numOrZero(player.get_current_channel_vu_mono(i)), 2)
     }
-    if (format_row !== format_last_row) {
-      format_pattern_row_all_channels.push(`${leftPadNum(format_row, 3)}: ${format_pattern_row_channel.join(' | ')}`)
+    let format_pattern_row_channel_text = `${format_row_num}: ${format_pattern_row_channel.join(' | ')}`
+    let row_length = format_pattern_row_channel_text.length
+    if (format_row_num !== format_last_row_num) {
+      format_pattern_row_all_channels.push(`<span style='background-color:black'>${format_pattern_row_channel_text}\u00A0</span>`)
+      //row++
     }
-    let row_max = 180
-    let row_len = `${format_row}: ${format_pattern_row_channel.join(' | ')}`.length
-    if (row_len >= row_max) {
-      //console.log(`DEBUG: format_pattern_row_all_channels ${row_len} >=${row_max} set width to max-content`)
+    if (row_length >= max_row_length) {
+      //console.log(`DEBUG: format_pattern_row_all_channels ${row_length} >=${max_row_length} set width to max-content`)
       document.getElementById('pattern_row_channel').style.width = "max-content"
     } else {
-      //console.log(`DEBUG: format_pattern_row_channels ${row_len} smaller than ${row_max}, set width width to 100%`)
-      document.getElementById('pattern_row_channel').style.width = "100%"
+      //console.log(`DEBUG: format_pattern_row_channels ${row_length} smaller than ${max_row_length}, set width width to 99%`)
+      document.getElementById('pattern_row_channel').style.width = "99%"  // "fit-content"
     }
+    // TODO:
     all_channels_vu_mono = format_get_current_channel_vu_mono
     if (debug > 3) {
       console.log('DEBUG: all_channels_vu_mono =', all_channels_vu_mono)
@@ -338,27 +423,53 @@ libopenmpt.onRuntimeInitialized = function () {
     //
     // Show data
     //
-    //document.getElementById('pattern').style.height = `${7 + pattern_max_rows}lh`
+    //document.getElementById('patterns').style.height = `${7 + pattern_max_rows}lh`
+  
+    format_pattern_result = ''
+
     let pattern_length = format_pattern_row_all_channels.length
-    //let format_pattern_result = ''
-    // TODO: add highlight bar for current row, and row divider every 5 rows
+    let pattern_start = pattern_length - pattern_max_rows;
+    let mid_row = (pattern_max_rows/2)
+
     /*
-    if (i % 5 == 0) {
-      format_pattern_result += `<span style="color:white;background-color:#414141;"><strong>${format_pattern_row_all_channels[i] ? format_pattern_row_all_channels[i] + '&nbsp;\n' : ''}</strong></span>`
-    } else {
-      format_pattern_result += format_pattern_row_all_channels[i] ? format_pattern_row_all_channels[i] + '&nbsp;\n' : ''
+    if (format_pattern_row_all_channels[pattern_start+(mid_row-1)]) {
+      format_pattern_row_all_channels[pattern_start+5] = format_pattern_row_all_channels[pattern_start+5].replace('background-color:blue', 'background-color:black')
+    }
+
+    if (format_pattern_row_all_channels[pattern_start+mid_row]) {
+      format_pattern_row_all_channels[pattern_start+6] = format_pattern_row_all_channels[pattern_start+6].replace(/background-color:(black|#333)/, 'background-color:blue')
     }
     */
-    for (let i = pattern_length - pattern_max_rows; i < pattern_length; i++) {
+
+    if (format_pattern_row_all_channels[pattern_length-2]) {
+      format_pattern_row_all_channels[pattern_length-2] = format_pattern_row_all_channels[pattern_length-2].replace('background-color:darkblue', 'background-color:black')
+    }
+
+    if (format_pattern_row_all_channels[pattern_length-1]) {
+      format_pattern_row_all_channels[pattern_length-1] = format_pattern_row_all_channels[pattern_length-1].replace(/background-color:(black|#333)/, 'background-color:darkblue')
+    }
+
+    for (let i = pattern_start; i < pattern_length; i++) {
+      if (i % 5 == 0) {
+        //console.log('DEBUG: format_pattern_row_all_channels[i]=', format_pattern_row_all_channels[i])
+        if (format_pattern_row_all_channels[i]) {
+          format_pattern_row_all_channels[i] = format_pattern_row_all_channels[i].replace('background-color:black', 'background-color:#333')
+        }
+      }
       format_pattern_result += format_pattern_row_all_channels[i] ? format_pattern_row_all_channels[i] + ' \n' : ''
     }
+
+    //format_pattern_result = format_pattern_row_all_channels.slice(pattern_start, pattern_length).join('\n');
+
     document.getElementById('channels').innerHTML = format_channels
     document.getElementById('pattern_row_channel').innerHTML = format_pattern_result
-    for (let i = 0; i < all_channels_vu_mono.length; i++) {
-      if (document.getElementById('meter_' + i)) {
-        document.getElementById('meter_' + i).setAttribute('value', all_channels_vu_mono[i])
-      } else {
-        document.getElementById('channel_vu_meters').innerHTML += `${(i === 0 ? '\u00A0'.repeat(4) : '')} <meter id="meter_${i}" value="0" min="0" max="1" low="0.4" high="0.7" optimum="0.1"></meter>`
+    if (selectOptions().OPTIONS.show_mini_vu) {
+      for (let i = 0; i < all_channels_vu_mono.length; i++) {
+        if (document.getElementById('meter_' + i)) {
+          document.getElementById('meter_' + i).setAttribute('value', all_channels_vu_mono[i])
+        } else {
+          document.getElementById('channel_vu_meters').innerHTML += `${(i === 0 ? '\u00A0'.repeat(4) : '')} <meter id="meter_${i}" value="0" min="0" max="1" low="0.4" high="0.7" optimum="0.1"></meter>`
+        }
       }
     }
     //format_all_channels_vu_mono = []
@@ -367,9 +478,9 @@ libopenmpt.onRuntimeInitialized = function () {
   function endSong() {
     let set_position = true
     stopSong(set_position)
-    console.log('DEBUG: clear intervalID = ', intervalID)
     player = undefined
     //meter = undefined
+    console.log('DEBUG: clear intervalID = ', intervalID)
     clearInterval(intervalID)
     document.getElementById('song_info').innerHTML = ''
     document.getElementById('scroller').innerHTML = '<marquee style="color:var(--marquee-color);background-color:var(--marquee-bg-color);">No module loaded, click on a song below</marquee>'
@@ -378,8 +489,8 @@ libopenmpt.onRuntimeInitialized = function () {
     document.getElementById('position_range').disabled = true
     document.getElementById('tempo_range').disabled = true
     document.getElementById('pitch_range').disabled = true
-    document.getElementById('pattern').style.display = 'none'
-    document.getElementById('comments').style.display = 'none'
+    document.getElementById('patterns').style.display = 'none'
+    document.getElementById('text').style.display = 'none'
     document.querySelectorAll(".song").forEach(e => {
       e.style.color = 'inherit'
     })
@@ -390,11 +501,13 @@ libopenmpt.onRuntimeInitialized = function () {
       isModuleLoaded = false
       volMeterData.volume = 0;
     })
-    if (play_next) {
-      if (shuffle) {
+    if (selectOptions().OPTIONS.play_next) {
+      if (selectOptions().OPTIONS.shuffle) {
         let max = document.querySelectorAll('.song').length
         index = Math.floor(Math.random() * (max - 0) ) + 0;
-        modurl = document.querySelectorAll('.song') ? document.querySelectorAll('.song')[index].getAttribute("data-modurl") : null
+        if (document.querySelectorAll('.song')[index]) {
+          modurl = document.querySelectorAll('.song') ? document.querySelectorAll('.song')[index].getAttribute("data-modurl") : null
+        }
         loadURL(modurl)
       } else {
         nextSong();
@@ -459,8 +572,9 @@ libopenmpt.onRuntimeInitialized = function () {
       date = moddate
     }
 
-    format_filename = format_filename ? format_filename.split(/[/#?]/).pop() : 'N/A'
+    format_filename = format_filename ? decodeURI(format_filename.split(/[/#?]/).pop()) : 'N/A'
     format_song_id = metadata['filename'] ? metadata['filename'] : format_filename
+    format_location = format_location.split('/').pop()
     format_location = format_location ? format_location : '<span id="font-bg-color">N/A</span>'
 
     if (metadata['song_title'] && metadata['artist']) {
@@ -472,7 +586,7 @@ libopenmpt.onRuntimeInitialized = function () {
     }
 
     if (debug > 0) {
-      console.log(`DEBUG: metadata filename=${filename}\n\nmodsize=${modsize} moddate=${moddate} format_filename=${format_filename}`)
+      console.log(`DEBUG: filename=`, filename, `\n\nmetadata modtitle=${modtitle} modsize=${modsize} moddate=${moddate} format_filename=${format_filename}`)
       //console.log('DEBUG: metadata = ', metadata);
       //console.log('DEBUG: format_bg_style_height = ', format_bg_style_height);
     }
@@ -553,9 +667,10 @@ libopenmpt.onRuntimeInitialized = function () {
     }
   }
 
-  //TODO:
+  // TODO:
   //async function afterLoad(path, buffer) {
-    //await Promise.resolve(player.play(buffer));
+  //  await Promise.resolve(player.play(buffer));
+  //  ...
 
   function afterLoad(path, buffer) {
     player.play(buffer)
@@ -575,29 +690,34 @@ libopenmpt.onRuntimeInitialized = function () {
     }
     metaData(path);
     setPlayButtonId();
-    //TODO: use init instead of startAudio
-    // enable meter for vu and visualizer, they use volMeterData.volume and volMeterData.buffer
+    // XXX: enable meter for vu and visualizer (they use volMeterData.volume and volMeterData.buffer)
+    // TODO: use init instead of startAudio
     if (enable_volume_meter) {
       initVolMeter(player).then(() => {
         startAudio(player.context, player);
         isPlaying = true;
         // vu.js (new)
-        if (show_vu) {
+        if (selectOptions().OPTIONS.show_vu) {
           initVU();
         }
         // visualizer.js
-        if (show_visualizer) {
+        if (selectOptions().OPTIONS.show_vu) {
           function waitBuffer() {
             if (!volMeterData.buffer) {
               setTimeout(() => { waitBuffer() }, 100)
               return
             }
-            visualize(getVisualSetting())
+            let visual = getVisualSetting()
+            visualize(visual);
+            document.getElementById("visual_name").innerHTML = visual ? `"${visual}"` : `"..."`;
           }
           waitBuffer()
         }
       });
     }
+
+    // TODO: get volume
+
     //console.log('DEBUG: getGlobalVolume', player.getGlobalVolume());
     //console.log('DEBUG: setGlobalVolume', player.setGlobalVolume(0.1));
     //console.log('DEBUG: getGlobalVolume', player.getGlobalVolume());
@@ -610,6 +730,7 @@ libopenmpt.onRuntimeInitialized = function () {
 
     //console.log('DEBUG: interactiveFunction', player.interactiveFunction.setCurrentSpeed)
     //console.log('DEBUG: getVolume', player.getVolume())
+
   }
 
   function loadURL(path) {
@@ -632,11 +753,13 @@ libopenmpt.onRuntimeInitialized = function () {
   function playDefaultSong() {
     let index = 0
     if (!default_modurl) {
-      if (shuffle) {
+      if (selectOptions().OPTIONS.shuffle) {
         let max = document.querySelectorAll('.song').length
         index = Math.floor(Math.random() * (max - 0) ) + 0;
+        if (document.querySelectorAll('.song')[index]) {
+          default_modurl = document.querySelectorAll('.song') ? document.querySelectorAll('.song')[index].getAttribute("data-modurl") : null
+        }
       }
-      default_modurl = document.querySelectorAll('.song') ? document.querySelectorAll('.song')[index].getAttribute("data-modurl") : null
     }
     console.log('DEBUG: default_modurl', default_modurl)
     modurl = (default_modurl) ? default_modurl : default_example_modurl;
@@ -679,7 +802,7 @@ libopenmpt.onRuntimeInitialized = function () {
   function stopSong(set_position=False) {
     if (player) {
       if (set_position) {
-        player.module_set_position_seconds(0)
+        player.set_position_seconds(0)
       }
       player.currentPlayingNode.pause()
       setPlayButtonId();
@@ -805,18 +928,18 @@ libopenmpt.onRuntimeInitialized = function () {
   document.querySelector('#next').addEventListener('click', nextButton, false)
 
   document.querySelector('#position_range').addEventListener('input', function (e) {
-    player.module_set_position_seconds(parseFloat(e.target.value))
+    player.set_position_seconds(parseFloat(e.target.value))
     document.getElementById('position_range').innerHTML = e.target.value.toString()
   }, false)
 
-  document.querySelector('#pitch_range').addEventListener('input', function (e) {
-    player.module_ctl_set_floatingpoint('play.pitch_factor', parseFloat(e.target.value))
-    document.getElementById('pitch_factor').innerHTML = parseFloat(e.target.value).toFixed(2).toString()
+  document.querySelector('#tempo_range').addEventListener('input', function (e) {
+    player.ctl_set_floatingpoint('play.tempo_factor', parseFloat(e.target.value))
+    document.getElementById('tempo_factor').innerHTML = parseFloat(e.target.value).toFixed(2).toString()
   }, false)
 
-  document.querySelector('#tempo_range').addEventListener('input', function (e) {
-    player.module_ctl_set_floatingpoint('play.tempo_factor', parseFloat(e.target.value))
-    document.getElementById('tempo_factor').innerHTML = parseFloat(e.target.value).toFixed(2).toString()
+  document.querySelector('#pitch_range').addEventListener('input', function (e) {
+    player.ctl_set_floatingpoint('play.pitch_factor', parseFloat(e.target.value))
+    document.getElementById('pitch_factor').innerHTML = parseFloat(e.target.value).toFixed(2).toString()
   }, false)
 
   document.querySelector('#volume_range').addEventListener('input', function (e) {
@@ -838,7 +961,7 @@ libopenmpt.onRuntimeInitialized = function () {
     sort_buttons += `<button class="btn-txt" id="sort_${k}">${k}</button>${i<last ? '|' : ''}`;
     i++;
   });
-  document.getElementById('sort_buttons').innerHTML = sort_buttons
+  document.getElementById('action').innerHTML = sort_buttons
   Object.keys(toggle_sort).forEach(k =>
     document.querySelector(`#sort_${k}`).addEventListener('click', function () { sortSongs(k, toggle_sort[k]); })
   );
@@ -870,10 +993,10 @@ libopenmpt.onRuntimeInitialized = function () {
         stopButton();
         break;
       case "ArrowRight":
-        player.module_set_position_seconds(parseFloat(player.getCurrentTime() + 10))
+        player.set_position_seconds(parseFloat(player.getCurrentTime() + 10))
         break;
       case "ArrowLeft":
-        player.module_set_position_seconds(parseFloat(player.getCurrentTime() - 10))
+        player.set_position_seconds(parseFloat(player.getCurrentTime() - 10))
         break;
       case "KeyM":
         if (player) {
@@ -945,6 +1068,7 @@ libopenmpt.onRuntimeInitialized = function () {
 
   document.querySelector('input[name=files]').addEventListener('change', function (evt) {
     modurl = null
+    modtitle = null
     loadURL(evt.target.files[0]);
     let property_value = false
     disableStopButton(property_value)
@@ -982,11 +1106,11 @@ libopenmpt.onRuntimeInitialized = function () {
         document_songs_defined = true;
         document.querySelectorAll('.song').forEach(song => {
           if (!song.getAttribute("data-modfile")) {
-            song.setAttribute("data-modfile", song.dataset.modurl.split(/[/#?]/).pop())
+            song.setAttribute("data-modfile", decodeURI(song.dataset.modurl.split(/[/#?]/).pop()))
           }
           addListenerToSong(song);
         });
-        document.getElementById('pl_stats').innerHTML = `<strong>${document.querySelectorAll('#playlist .song').length}</strong> songs`
+        document.getElementById('stats').innerHTML = `<strong>${document.querySelectorAll('#playlist .song').length}</strong> songs`
       } else {
         let tracksmsg = document.getElementById('tracksmsg').innerHTML
         document.getElementById('tracksmsg').innerHTML = "<p>No tracks found, loading playlists.html  ...</p>" + tracksmsg
@@ -1001,22 +1125,22 @@ libopenmpt.onRuntimeInitialized = function () {
           if (pl.getAttribute('data-modplist')) {
             pl.querySelectorAll('.song').forEach(song => {
               if (!song.getAttribute("data-modfile")) {
-                song.setAttribute("data-modfile", song.dataset.modurl.split(/[/#?]/).pop())
+                song.setAttribute("data-modfile", decodeURI(song.dataset.modurl.split(/[/#?]/).pop()))
               }
               addListenerToSong(song);
               pl.appendChild(song);
             });
           }
           document.getElementById('playlist').appendChild(pl);
-          document.getElementById('pl_stats').innerHTML = `Total:   
+          document.getElementById('stats').innerHTML = `Total:
             <strong>${document.querySelectorAll('#playlist .collection').length}</strong> playlists
             <strong>${document.querySelectorAll('#playlist .song').length}</strong> songs
           `
         });
       });
-      document.getElementById('pl_links').innerHTML = '<p><a href="?" onclick="location.reload();">BACK</a></p>'
+      document.getElementById('nav').innerHTML = '<p><a href="?" onclick="location.reload();">BACK</a></p>'
     } else {
-      document.getElementById('pl_links').innerHTML = '<p><a href="?more=true" onclick="location.reload();">MORE</a></p>';
+      document.getElementById('nav').innerHTML = '<p><a href="?more=true" onclick="location.reload();">MORE</a></p>';
     };
   };
   playlist();
@@ -1053,7 +1177,7 @@ libopenmpt.onRuntimeInitialized = function () {
       document.querySelector("#playlist").appendChild(e)
     })
     toggle_sort[type] = !toggle_sort[type]
-    document.getElementById('sort_order').innerHTML = `${toggle_sort[type] ? 'asc' : 'desc'}`
+    document.getElementById('order').innerHTML = `${toggle_sort[type] ? 'asc' : 'desc'}`
   };
 
 } // end libopenmpt.onRuntimeInitialized
@@ -1068,11 +1192,9 @@ window.onload = function () {
   document.getElementById("position_time").remove
   document.getElementById("position_time").innerHTML = "00:00"
   document.getElementById("position_percent").innerHTML = "(0%)"
-  document.getElementById('pattern_row_channel').style.height = `${pattern_max_rows}lh`;
   document.getElementById('volume_range').value = 75
   document.getElementById('volume_percent').innerHTML = "75%"
-  document.getElementById('tempo_factor').innerHTML = "1.00"
-  document.getElementById('pitch_factor').innerHTML = "1.00"
+  document.getElementById('pattern_row_channel').style.height = `${pattern_max_rows}lh`;
   if (show_open_button) {
     document.getElementById('eject').value = "[+] Open"
   }

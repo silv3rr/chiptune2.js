@@ -26,7 +26,7 @@ Has a few additional libopenmpt functions defined, which are not in original chi
 - `libopenmpt._openmpt_module_get_num_instruments()`
 - `libopenmpt._openmpt_module_get_num_channels()`
 - `libopenmpt._openmpt_module_get_current_playing_channels()`
-- `libopenmpt._openmpt_module_ext_get_interface()`
+- _`libopenmpt._openmpt_module_ext_get_interface()`_
 
 - `ChiptuneJsPlayer.prototype.setVolume`
 - `ChiptuneJsPlayer.prototype.getVolume`

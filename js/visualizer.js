@@ -10,7 +10,6 @@ function visualize(visualSetting) {
     return Number(Math.round(num + `e${dec}`) + `e-${dec}`);
   }
   function colorCalc(i=0) {
-    random = (min, max) => min + Math.floor(Math.random() * (max - min + 1))
     return {
       line: {
         0: "rgb(87, 87, 87)",
@@ -30,15 +29,19 @@ function visualize(visualSetting) {
         blue: `rgb(${i * 0.1}, ${i * 1.1}, ${i + 100})`,
         pink: `rgb(${i + 100}, 5, 150)`,
         green_red: `rgb(${i + 50}, ${i + 0.1}, 50)`,
+        black: `rgb(${i + 10}, ${i + 10}, ${i + 10})`,
       },
       frequencybars: {
         red: `rgb(${i ? i + 100 : 250}, 50, 50)`,
         green: `rgb(50, ${i ? i + 100 : 150}, 50)`,
-        blue1: `rgb(50, 50, ${i ? (i * 25) + 50 : 250})`,
-        blue2: `rgb(${random(i, 255)},${random(i, 255)},${random(i, 255)})`,
-        blue: `rgb(${i * 0.2}, ${i * 0.2}, ${(i * 5)}`,
+        blue: `rgb(50, 50, ${i ? (i * 25) + 50 : 250})`,
+        blue2: `rgb(${i * 0.2}, ${i * 0.2}, ${(i * 5)}`,
       }
     }
+  }
+  function colorRnd(i=0) {
+    let rnd = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
+    return `rgb(${rnd(i, 255)}, ${rnd(i, 255)}, ${rnd(i, 255)})`
   }
   function colorSwitch(i=0) {
     if(roundNumDec(i, 0) % 100 == 0) {
@@ -52,7 +55,7 @@ function visualize(visualSetting) {
       canvasCtx.fillStyle = colorCalc()['bars']['darkred'];
     }
   }
-  
+ 
   //const visualSetting = visualSelect.value;
 
   // Set up canvas context for visualizer
@@ -91,7 +94,7 @@ function visualize(visualSetting) {
     canvasCtx.clearRect(0, 0, WIDTH, HEIGHT);
     const draw = () => {
       const bufferLength = volMeterData.buffer ? volMeterData.buffer.length : 0
-      const dataArray = volMeterData.buffer ? volMeterData.buffer : 0 
+      const dataArray = volMeterData.buffer ? volMeterData.buffer : 0
       drawVisual = requestAnimationFrame(draw);
       canvasCtx.strokeStyle = color['black']
       canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
@@ -186,12 +189,12 @@ function visualize(visualSetting) {
       canvasCtx.lineTo(WIDTH, HEIGHT-y);
       canvasCtx.stroke();
 
-      // uncomment to add 2 more gray lines before/after
-      [m-1, m+1].forEach(i => {
+      // uncomment to add 2 + 2 more gray lines before/after
+      [m-1, m+1, m-3, m+3].forEach(i => {
         let y = ((vol*i) * (HEIGHT/2))*0.4;
         if (y > HEIGHT-1) {
           y = HEIGHT-1;
-        } 
+        }
         canvasCtx.lineWidth = 2;
         canvasCtx.strokeStyle = color['gray'];
         canvasCtx.beginPath();

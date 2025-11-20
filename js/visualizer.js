@@ -101,6 +101,9 @@ function visualize(visualSetting) {
       const sliceWidth = (WIDTH * 1.0) / bufferLength;
       let x = 0;
       for (let i = 0; i < bufferLength; i++) {
+        if (visualRainbow) {
+          canvasCtx.strokeStyle = colorRnd(i)
+        }
         //const v = dataArray[i] / 128.0;
         const v = dataArray[i];
         const y = (v * HEIGHT) / 2;
@@ -135,10 +138,18 @@ function visualize(visualSetting) {
         if (barHeight % 2 === 0) {
           canvasCtx.fillStyle = color['darkblue']
           canvasCtx.fillRect(x, (HEIGHT - barHeight / 2), barWidth, barHeight / 4);
-          canvasCtx.fillStyle = colorCalc(barHeight)['frequencybars']['blue']
-          canvasCtx.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
+          if (visualRainbow) {
+            canvasCtx.fillStyle = colorRnd(i)
+          } else {
+            canvasCtx.fillStyle = colorCalc(barHeight)['frequencybars']['blue']
+          }
+        canvasCtx.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
         } else {
-          canvasCtx.fillStyle = colorCalc(barHeight)['frequencybars']['blue']
+          if (visualRainbow) {
+            canvasCtx.fillStyle = colorRnd(i)
+          } else {
+            canvasCtx.fillStyle = colorCalc(barHeight)['frequencybars']['blue']
+          }
           canvasCtx.fillRect(x, HEIGHT - barHeight / 2, barWidth, barHeight / 2);
           x += barWidth;
         }
@@ -165,7 +176,11 @@ function visualize(visualSetting) {
         y = HEIGHT-3;
       }
       canvasCtx.lineWidth = 3 + (vol * 50);
-      canvasCtx.strokeStyle = colorCalc()['line'][norm_tens_vol]
+      if (visualRainbow) {
+        canvasCtx.strokeStyle = colorRnd(norm_tens_vol)
+      } else {
+        canvasCtx.strokeStyle = colorCalc()['line'][norm_tens_vol]
+      }
       canvasCtx.beginPath();
       canvasCtx.moveTo(0, HEIGHT-y);
       canvasCtx.lineTo(WIDTH, HEIGHT-y);
@@ -195,8 +210,16 @@ function visualize(visualSetting) {
       for (let i = 0; i < bufferLength; i++) {
         // barHeight = dataArray[i];
         // barHeight = volMeterData.volume / 2
-        const barHeight = roundNumDec(dataArray[i], 2) * 500;          
-        canvasCtx.fillStyle = colorCalc(i)['invertedbars']['red'];
+        const barHeight = roundNumDec(dataArray[i], 2) * 500;
+        if (barHeight < -200) {
+          canvasCtx.fillStyle = color['black']
+          canvasCtx.fillRect(0, 0, WIDTH, HEIGHT);
+        }
+        if (visualRainbow) {
+          canvasCtx.fillStyle = colorRnd(i)
+        } else {
+          canvasCtx.fillStyle = colorCalc(i)['invertedbars']['red'];
+        }
         canvasCtx.fillRect(0, HEIGHT - barHeight / 2, barWidth, barHeight);
       }
     }

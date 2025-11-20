@@ -477,17 +477,19 @@ libopenmpt.onRuntimeInitialized = function () {
       //console.log('DEBUG: format_bg_style_height = ', format_bg_style_height);
     }
 
-    let format_current_song_info =
-      `songid: <span id='value'>${format_song_id ? format_song_id : '<span id="font-bg-color">N/A</span>'}</span>
-       filename: ${modurl ? `<a href="${modurl}">` + format_filename + '</a>' : format_filename}
-       location: ${format_location}
-       size: ${size ? `${Number(size)}kb` : '<span id="font-bg-color">N/A</span>'}
-       duration: ${format_duration_time}
-       patterns: ${format_num_patterns}
-       channels: ${leftPadNum(channels, 2)}
-       type: ${metadata['type_long'] ? metadata['type_long'] : '<span id="font-bg-color">N/A</span>'}
-       tracker: ${metadata['tracker'] ? metadata['tracker'] : '<span id="font-bg-color">N/A</span>'}
-       date: ${(date !== '' && date !== null) ? date : '<span id="font-bg-color">N/A</span>'}`
+    let format_current_song_info = ` \
+      filename: ${modurl ? `<a href="${modurl}">` + format_filename + '</a>' : format_filename}
+      location: ${format_location}
+      song: <span id='value'>"${format_song_id ? format_song_id : '<span id="font-bg-color">N/A</span>'}"</span>
+      duration: ${format_duration_time}
+      date: ${(date !== '' && date !== null) ? date : '<span id="font-bg-color">N/A</span>'}
+      size: ${size ? `${Number(size)}kb` : '<span id="font-bg-color">N/A</span>'}
+      ${(subsongs > 1) ? `subsongs: ${subsongs}\n` : '' } \
+      patterns: ${format_num_patterns}
+      channels: ${leftPadNum(channels, 2)}
+      type: ${metadata['type_long'] ? metadata['type_long'] : '<span id="font-bg-color">N/A</span>'}
+      tracker: ${metadata['tracker'] ? metadata['tracker'] : '<span id="font-bg-color">N/A</span>'}
+    `
 
     if (debug > 2) {
       console.log('DEBUG: format_song_details =', format_current_song_info)
@@ -557,8 +559,20 @@ libopenmpt.onRuntimeInitialized = function () {
 
   function afterLoad(path, buffer) {
     player.play(buffer)
-    player.module_ctl_set_text('play.at_end', play_at_end)
-    duration_seconds = numOrZero(player.duration())
+    player.ctl_set_text('play.at_end', play_at_end)
+    //player.context.resume();
+    subsongs = player.get_num_subsongs()
+    if (subsongs > 1) {
+      let subsongs_total_duration = 0;
+      for (let i = 0; i < subsongs; i++) {
+        player.select_subsong(i);
+        subsongs_total_duration += player.duration()
+      }
+      duration_seconds = numOrZero(subsongs_total_duration)
+      player.select_subsong(-1);  // '-1' = all
+    } else { 
+      duration_seconds = numOrZero(player.duration())
+    }
     metaData(path);
     setPlayButtonId();
     //TODO: use init instead of startAudio

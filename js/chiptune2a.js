@@ -73,7 +73,7 @@ ChiptuneJsPlayer.prototype.load = function(input, callback) {
   }
 }
 
-// old attempt to add gain, doesnt work
+// previous attempt to add gain, doesnt work
 /*
 ChiptuneJsPlayer.prototype.unlock = function() {
   var context = this.context;
@@ -177,31 +177,60 @@ ChiptuneJsPlayer.prototype.getCurrentChannels = function () {
 };
 
 //pattern 
-ChiptuneJsPlayer.prototype.formatPatternRowChannel = function (ptr, pattern, row, channels) {
-  //console.log("DEBUG: chiptune2.js - ptr pattern row channels", ptr, pattern, row, channels)
+
+ChiptuneJsPlayer.prototype.format_pattern_row_channel = function (pattern, row, channel) {
   return UTF8ToString(
     libopenmpt._openmpt_module_format_pattern_row_channel(
-      ptr,
+      this.currentPlayingNode.modulePtr,
       pattern,
       row,
-      channels,
+      channel,
+      0,
+      true
+    )
+  );
+};
+
+/*
+ChiptuneJsPlayer.prototype.format_pattern_row_channel = function (channel) {
+  return UTF8ToString(
+    libopenmpt._openmpt_module_format_pattern_row_channel(
+      this.currentPlayingNode.modulePtr,
+      this.getCurrentPattern,
+      this.getCurrentRow,
+      channel,
+      0,
+      true
+    )
+  );
+};
+*/
+
+ChiptuneJsPlayer.prototype.highlight_pattern_row_channel = function (channel) {
+  return UTF8ToString(
+    libopenmpt._openmpt_module_highlight_pattern_row_channel(
+      this.currentPlayingNode.modulePtr,
+      this.getCurrentPattern,
+      this.getCurrentRow,
+      channel,
       0,
       true
     )
   );
 };
   
-ChiptuneJsPlayer.prototype.formatPatternRowChannelCommand = function () {
+ChiptuneJsPlayer.prototype.format_pattern_row_channel_command = function (channel, command) {
   return UTF8ToString(
       libopenmpt._openmpt_module_format_pattern_row_channel_command(
       this.currentPlayingNode.modulePtr,
       this.getCurrentPattern,
-      this.getCurrentRows,
-      this.getCurrentChannels,
-      5
+      this.getCurrentRow,
+      channel,
+      command
    )
   );
 };
+
 
 // get sample and instrument names
 ChiptuneJsPlayer.prototype.getSampleNames = function() {
@@ -231,7 +260,7 @@ ChiptuneJsPlayer.prototype.getInstrumentNames = function() {
 }
 
 // module_ctl_set is deprecated. use int, float or text instead
-ChiptuneJsPlayer.prototype.module_ctl_set_text = function(ctl, value) {
+ChiptuneJsPlayer.prototype.ctl_set_text = function(ctl, value) {
   ctlBuffer = libopenmpt._malloc(ctl.length + 1)
   valueBuffer = libopenmpt._malloc(value.length + 1)
   writeAsciiToMemory(ctl, ctlBuffer)
@@ -240,31 +269,37 @@ ChiptuneJsPlayer.prototype.module_ctl_set_text = function(ctl, value) {
   return libopenmpt._openmpt_module_ctl_set_text(this.currentPlayingNode.modulePtr, ctlBuffer, valueBuffer)
 }
 
-ChiptuneJsPlayer.prototype.module_ctl_set_floatingpoint = function(ctl, value) {
+ChiptuneJsPlayer.prototype.ctl_set_floatingpoint = function(ctl, value) {
   ctlBuffer = libopenmpt._malloc(ctl.length + 1)
   writeAsciiToMemory(ctl, ctlBuffer)
   return libopenmpt._openmpt_module_ctl_set_floatingpoint(this.currentPlayingNode.modulePtr, ctlBuffer, value)
 }
 
-ChiptuneJsPlayer.prototype.module_ctl_get_floatingpoint = function(ctl) {
+ChiptuneJsPlayer.prototype.ctl_get_floatingpoint = function(ctl) {
   ctlBuffer = libopenmpt._malloc(ctl.length + 1)
   writeAsciiToMemory(ctl, ctlBuffer);
   return libopenmpt._openmpt_module_ctl_get_floatingpoint(this.currentPlayingNode.modulePtr, ctlBuffer)
 }
 
-ChiptuneJsPlayer.prototype.module_set_position_seconds = function(value) {
+ChiptuneJsPlayer.prototype.ctl_get_text = function(ctl) {
+  ctlBuffer = libopenmpt._malloc(ctl.length + 1)
+  writeAsciiToMemory(ctl, ctlBuffer)
+  return libopenmpt._openmpt_module_ctl_get_text(this.currentPlayingNode.modulePtr, ctlBuffer)
+}
+
+ChiptuneJsPlayer.prototype.set_position_seconds = function(value) {
   return libopenmpt._openmpt_module_set_position_seconds(this.currentPlayingNode.modulePtr, value)
 }
 
-ChiptuneJsPlayer.prototype.module_get_current_channel_vu_left = function(value) {
+ChiptuneJsPlayer.prototype.get_current_channel_vu_left = function(value) {
   return libopenmpt._openmpt_module_get_current_channel_vu_left(this.currentPlayingNode.modulePtr, value)
 }
 
-ChiptuneJsPlayer.prototype.module_get_current_channel_vu_right = function(value) {
+ChiptuneJsPlayer.prototype.get_current_channel_vu_right = function(value) {
   return libopenmpt._openmpt_module_get_current_channel_vu_right (this.currentPlayingNode.modulePtr, value)
 }
 
-ChiptuneJsPlayer.prototype.module_get_current_channel_vu_mono = function(value) {
+ChiptuneJsPlayer.prototype.get_current_channel_vu_mono = function(value) {
   return libopenmpt._openmpt_module_get_current_channel_vu_mono(this.currentPlayingNode.modulePtr, value)
 }
 
@@ -273,6 +308,30 @@ ChiptuneJsPlayer.prototype.get_string = function(key) {
   writeAsciiToMemory(key, keyBuffer)
   return UTF8ToString(libopenmpt._openmpt_get_string(keyBuffer))
 }
+
+// TODO: subsongs
+
+ChiptuneJsPlayer.prototype.get_num_subsongs = function() {
+  return libopenmpt._openmpt_module_get_num_subsongs(this.currentPlayingNode.modulePtr)
+}
+
+ChiptuneJsPlayer.prototype.get_selected_subsong = function() {
+  return libopenmpt._openmpt_module_get_selected_subsong(this.currentPlayingNode.modulePtr)
+}
+
+ChiptuneJsPlayer.prototype.select_subsong = function(value) {
+  return libopenmpt._openmpt_module_select_subsong(this.currentPlayingNode.modulePtr, value)
+}
+
+ChiptuneJsPlayer.prototype.get_subsong_name = function(value) {
+  return libopenmpt.UTF8ToString(libopenmpt._openmpt_module_get_subsong_name(this.currentPlayingNode.modulePtr, value))
+}
+
+ChiptuneJsPlayer.prototype.get_ctls = function() {
+  return UTF8ToString(libopenmpt._openmpt_module_get_ctls(this.currentPlayingNode.modulePtr))
+}
+
+// TODO: gain
 
 ChiptuneJsPlayer.prototype.getGain = function() {
   //return this.gain.gain.value;
@@ -301,7 +360,8 @@ function percentageToMillibel(pct) {
   return mB;
 } 
 
-// TODO: for getVolume
+// TODO: pct for getVolume
+
 function millibelToPercentage(mB) {
   const min = 0
   const max = 1000
